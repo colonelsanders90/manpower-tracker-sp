@@ -18,6 +18,7 @@ import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { downloadLog } from "@/lib/diagnosticLog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import logoOnNavy from "@/assets/raid/White_RAiD_onNavy.svg";
 
 const SIDEBAR_WIDTH = 220;
 const APPBAR_HEIGHT = 52;
@@ -62,16 +63,12 @@ export function AppShell() {
             borderBottom: "1px solid rgba(255,255,255,0.1)",
           }}
         >
-          <Typography
-            sx={{
-              fontFamily: '"Sometype Mono", monospace',
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: "0.05em",
-            }}
-          >
-            RA<span style={{ textTransform: "lowercase" }}>i</span>D
-          </Typography>
+          <Box
+            component="img"
+            src={logoOnNavy}
+            alt="RAiD"
+            sx={{ height: 36, width: "auto", display: "block" }}
+          />
           <Typography
             sx={{
               fontFamily: '"Sometype Mono", monospace',
@@ -80,7 +77,7 @@ export function AppShell() {
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: "rgba(255,255,255,0.65)",
-              mt: 1,
+              mt: 1.5,
             }}
           >
             Manpower Tracker
