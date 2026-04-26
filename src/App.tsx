@@ -13,7 +13,7 @@ import {
   Alert, Box, Button, CircularProgress, Paper, Typography,
 } from '@mui/material'
 import { setApiBase } from './lib/sharepoint'
-import { getWebServerRelativeUrl } from './lib/jsom'
+import { isJsomAvailable, getWebServerRelativeUrl } from './lib/jsom'
 import { log, downloadLog } from './lib/diagnosticLog'
 import { router } from './router'
 
@@ -29,6 +29,15 @@ export default function App() {
 
   useEffect(() => {
     if (import.meta.env.DEV) return
+
+    // If JSOM hasn't loaded (e.g. local preview, non-SP host) skip the dynamic
+    // URL resolution — VITE_SP_API_BASE is already set as the default in
+    // sharepoint.ts, so REST calls will target the correct subsite.
+    if (!isJsomAvailable()) {
+      setStartup({ phase: 'ready' })
+      return
+    }
+
     getWebServerRelativeUrl()
       .then(url => {
         setApiBase(url)
