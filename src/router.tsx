@@ -4,13 +4,20 @@ import {
   createRoute,
   createRouter,
   Outlet,
+  Link,
 } from "@tanstack/react-router";
-import { Box, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
+import { ProvisionPage } from "@/routes/provision";
 
 /**
- * Hash history is mandatory — see CLAUDE.md "TanStack Router must use hash
- * history" quirk. SP intercepts clean paths and 404s.
+ * Hash history is mandatory — see workspace CLAUDE.md "TanStack Router must
+ * use hash history" quirk. SP intercepts clean paths and 404s otherwise.
+ *
+ * Routes added so far:
+ *   /                  Placeholder dashboard (Phase 2 will fill in)
+ *   /admin/provision   Phase 1 — one-time list provisioning, IsSiteAdmin only
  */
+
 const rootRoute = createRootRoute({
   component: () => (
     <Box sx={{ p: 3 }}>
@@ -23,17 +30,26 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: () => (
-    <Box>
+    <Stack spacing={2}>
       <Typography variant="h4">RAiD Manpower Tracker</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        SP2013 port — scaffolding stage. Phase 1 (list provisioning) not yet
-        wired. See workspace CLAUDE.md for the build plan.
+      <Typography variant="body2" color="text.secondary">
+        SP2013 port — scaffolding stage. Phase 1 (list provisioning) wired.
       </Typography>
-    </Box>
+      <Typography variant="body2">
+        First-run admin task:{" "}
+        <Link to="/admin/provision">create the SharePoint lists</Link>.
+      </Typography>
+    </Stack>
   ),
 });
 
-const routeTree = rootRoute.addChildren([indexRoute]);
+const provisionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/provision",
+  component: ProvisionPage,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, provisionRoute]);
 
 export const router = createRouter({
   routeTree,

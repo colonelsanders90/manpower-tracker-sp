@@ -85,7 +85,7 @@ No data is seeded. HR enters branches and individuals through the UI.
 
 | Version | Date | Change |
 |---|---|---|
-| 1 | TBD | Initial provisioning — UNITS, ROLES, INDIVIDUALS, POSTINGS with v1 columns |
+| 1 | 2026-04-26 | Initial provisioning — UNITS, ROLES, INDIVIDUALS, POSTINGS. See per-list type files in `src/types/` for the v1 column shape. Lookups use `RelationshipDeleteBehavior="Restrict"` to mirror the Postgres FK guards. |
 
 `SCHEMA_VERSION = 1` in `src/provisioning/provisioningSequence.ts`. Bump on
 any add/remove/rename of a list column.
@@ -106,7 +106,7 @@ UI-layer code (Tailwind/shadcn) is rewritten in MUI but the structure is one-to-
 ## Status
 
 - [x] Phase 0 — workspace setup, scaffold, dependencies, theme, router stub
-- [ ] Phase 1 — list types + provisioning sequence
+- [x] Phase 1 — list types + provisioning sequence + `/admin/provision` route
 - [ ] Phase 2 — read-only views (dashboard, org, individuals, roles)
 - [ ] Phase 3 — admin auth gating
 - [ ] Phase 4 — CRUD mutations + 4 invariants
