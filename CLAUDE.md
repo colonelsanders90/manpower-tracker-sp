@@ -107,8 +107,13 @@ UI-layer code (Tailwind/shadcn) is rewritten in MUI but the structure is one-to-
 
 - [x] Phase 0 — workspace setup, scaffold, dependencies, theme, router stub
 - [x] Phase 1 — list types + provisioning sequence + `/admin/provision` route
-- [ ] Phase 2 — read-only views (dashboard, org, individuals, roles)
-- [ ] Phase 3 — admin auth gating
+- [x] Phase 2 — read-only views: dashboard, /org, /individuals (+ detail),
+      /roles movement watchlist (+ detail). Mock data layer for dev mode
+      (mirrors the Next.js seed; tree-shaken in prod). MUI port of the
+      AppShell, OrgChart, PostingTimeline, StatusBadge.
+- [ ] Phase 3 — admin auth gating (`useCurrentUser` already exposes
+      `IsSiteAdmin`, AppShell already hides Admin · Provision link from
+      viewers; remaining work is gating CRUD affordances in Phase 4)
 - [ ] Phase 4 — CRUD mutations + 4 invariants
 - [ ] Phase 5 — people picker (Autocomplete + getSiteUsers)
 - [ ] Phase 6 — diagnostics wiring (already templated)
