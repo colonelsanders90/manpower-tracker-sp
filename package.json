@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && mv dist/index.html dist/index.aspx",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit"
   },
