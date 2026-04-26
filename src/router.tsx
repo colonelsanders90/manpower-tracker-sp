@@ -12,13 +12,9 @@ import { IndividualDetailPage } from "@/routes/individualDetail";
 import { RolesPage } from "@/routes/roles";
 import { RoleDetailPage } from "@/routes/roleDetail";
 import { ProvisionPage } from "@/routes/provision";
+import { AdminPostingsPage } from "@/routes/adminPostings";
+import { AdminPeoplePage } from "@/routes/adminPeople";
 
-/**
- * Hash history is mandatory — see workspace CLAUDE.md "TanStack Router must
- * use hash history" quirk. SP intercepts clean paths and 404s otherwise.
- *
- * AppShell is the root component, providing the navy chrome and Outlet.
- */
 const rootRoute = createRootRoute({ component: AppShell });
 
 const indexRoute = createRoute({
@@ -57,6 +53,18 @@ const roleDetailRoute = createRoute({
   component: RoleDetailPage,
 });
 
+const adminPostingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/postings",
+  component: AdminPostingsPage,
+});
+
+const adminPeopleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/people",
+  component: AdminPeoplePage,
+});
+
 const provisionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/provision",
@@ -70,6 +78,8 @@ const routeTree = rootRoute.addChildren([
   individualDetailRoute,
   rolesRoute,
   roleDetailRoute,
+  adminPostingsRoute,
+  adminPeopleRoute,
   provisionRoute,
 ]);
 

@@ -31,6 +31,8 @@ const NAV_LINKS: { to: string; label: string; admin?: boolean }[] = [
   { to: "/org", label: "Org Structure" },
   { to: "/individuals", label: "Individuals" },
   { to: "/roles", label: "Roles" },
+  { to: "/admin/postings", label: "Admin · Postings", admin: true },
+  { to: "/admin/people", label: "Admin · People", admin: true },
   { to: "/admin/provision", label: "Admin · Provision", admin: true },
 ];
 

@@ -3,6 +3,7 @@ import { useUnits } from "@/hooks/useUnits";
 import { useRoles } from "@/hooks/useRoles";
 import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { buildUnitTree } from "@/lib/hierarchy";
 import { OrgChart } from "@/components/OrgChart";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
@@ -12,6 +13,8 @@ export function OrgPage() {
   const roles = useRoles();
   const individuals = useIndividuals();
   const postings = usePostings();
+  const currentUser = useCurrentUser();
+  const isAdmin = currentUser.data?.IsSiteAdmin === true;
 
   if (units.isLoading || roles.isLoading || individuals.isLoading || postings.isLoading)
     return <LoadingBlock label="Loading org tree…" />;
@@ -78,7 +81,22 @@ export function OrgPage() {
         <LegendDot color="#B4B2A9" label="Unfilled" />
       </Stack>
 
-      <OrgChart tree={tree} incumbents={incumbents} pendingByRole={pendingByRole} />
+      {isAdmin ? (
+        <OrgChart
+          tree={tree}
+          incumbents={incumbents}
+          pendingByRole={pendingByRole}
+          editable
+          allIndividuals={i}
+          allRoles={r}
+        />
+      ) : (
+        <OrgChart
+          tree={tree}
+          incumbents={incumbents}
+          pendingByRole={pendingByRole}
+        />
+      )}
     </Stack>
   );
 }

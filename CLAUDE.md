@@ -108,13 +108,30 @@ UI-layer code (Tailwind/shadcn) is rewritten in MUI but the structure is one-to-
 - [x] Phase 0 — workspace setup, scaffold, dependencies, theme, router stub
 - [x] Phase 1 — list types + provisioning sequence + `/admin/provision` route
 - [x] Phase 2 — read-only views: dashboard, /org, /individuals (+ detail),
-      /roles movement watchlist (+ detail). Mock data layer for dev mode
-      (mirrors the Next.js seed; tree-shaken in prod). MUI port of the
-      AppShell, OrgChart, PostingTimeline, StatusBadge.
-- [ ] Phase 3 — admin auth gating (`useCurrentUser` already exposes
-      `IsSiteAdmin`, AppShell already hides Admin · Provision link from
-      viewers; remaining work is gating CRUD affordances in Phase 4)
-- [ ] Phase 4 — CRUD mutations + 4 invariants
-- [ ] Phase 5 — people picker (Autocomplete + getSiteUsers)
+      /roles movement watchlist (+ detail). Mock data layer for dev mode.
+      MUI port of the AppShell, OrgChart, PostingTimeline, StatusBadge.
+      Self-hosted RAiD fonts (Outfit, Sometype Mono, Geist Mono) inlined
+      via @fontsource. Logo SVG inlined.
+- [x] Phase 3 — IsSiteAdmin gating throughout (no separate route work; SP
+      cert+smart-card handles network auth; SP list permissions are the
+      real authz boundary).
+- [x] Phase 4 — CRUD mutations with the 4 invariants.
+      Data-access seam (lib/dataAccess.ts) forks on import.meta.env.DEV →
+      mockStore for dev, sharepoint.ts REST for prod. Same mutation
+      logic for both.
+      Invariants ported from the Next.js prototype (lib/invariants.ts):
+        1. Single-Current per role
+        2. Single-head per unit
+        3. Branch-head level snap
+        4. isVacant sync
+      13 mutation hooks (useMutations.ts).
+      UI: editable OrgChart (admin only — edit/delete branch, edit/delete/
+      assign-person on each role, +Add role per branch, +Add branch),
+      /admin/postings (DataGrid + add/edit/delete dialogs), /admin/people
+      (DataGrid + add/edit/delete with FK-guard messages).
+      Five MUI dialog components: UnitFormDialog, RoleFormDialog,
+      PostingFormDialog, IndividualFormDialog, ConfirmDialog.
+- [ ] Phase 5 — people picker (Autocomplete + getSiteUsers/searchUsers)
+      to replace the manual individuals dropdown when assigning postings.
 - [ ] Phase 6 — diagnostics wiring (already templated)
 - [ ] Phase 7 — single-file build + first deploy
