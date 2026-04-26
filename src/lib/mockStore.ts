@@ -4,8 +4,8 @@
 // import.meta.env.DEV and call into either this store or the live REST API
 // without the rest of the app caring.
 //
-// Initial data is seeded from mockData.ts on module load. Mutations modify
-// the arrays in place. Survives HMR within a single tab session.
+// Mutations are persisted to localStorage so data survives page reloads
+// during local development. Call mockStore.reset() to wipe back to seed data.
 
 import type { UnitListItem, UnitListItemWrite } from "@/types/units";
 import type { RoleListItem, RoleListItemWrite } from "@/types/roles";
@@ -22,12 +22,47 @@ import {
   MOCK_POSTINGS,
 } from "./mockData";
 
-let units: UnitListItem[] = MOCK_UNITS.map((u) => ({ ...u }));
-let roles: RoleListItem[] = MOCK_ROLES.map((r) => ({ ...r }));
-let individuals: IndividualListItem[] = MOCK_INDIVIDUALS.map((i) => ({ ...i }));
-let postings: PostingListItem[] = MOCK_POSTINGS.map((p) => ({ ...p }));
+// ─── localStorage persistence helpers ───────────────────────────────────────
 
-let nextId = 1000;
+const LS_KEYS = {
+  units: "mock_units",
+  roles: "mock_roles",
+  individuals: "mock_individuals",
+  postings: "mock_postings",
+  nextId: "mock_next_id",
+};
+
+function lsGet<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function lsSet(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Quota exceeded or private-browsing restriction — silently ignore.
+  }
+}
+
+function lsClear(): void {
+  Object.values(LS_KEYS).forEach((k) => localStorage.removeItem(k));
+}
+
+// ─── Initial state — prefer localStorage, fall back to seed data ─────────────
+
+let units: UnitListItem[] = lsGet(LS_KEYS.units, MOCK_UNITS.map((u) => ({ ...u })));
+let roles: RoleListItem[] = lsGet(LS_KEYS.roles, MOCK_ROLES.map((r) => ({ ...r })));
+let individuals: IndividualListItem[] = lsGet(LS_KEYS.individuals, MOCK_INDIVIDUALS.map((i) => ({ ...i })));
+let postings: PostingListItem[] = lsGet(LS_KEYS.postings, MOCK_POSTINGS.map((p) => ({ ...p })));
+
+let nextId: number = lsGet(LS_KEYS.nextId, 1000);
+
 const NOW = () => new Date().toISOString();
 const STAFF = { Title: "Mock Author" };
 
@@ -40,13 +75,14 @@ function nextLookupTitle<T extends { Id: number; Title: string }>(
 }
 
 export const mockStore = {
-  /** Reset every list back to the seed data. Dev-only convenience. */
+  /** Reset every list back to the seed data and clear localStorage. */
   reset(): void {
     units = MOCK_UNITS.map((u) => ({ ...u }));
     roles = MOCK_ROLES.map((r) => ({ ...r }));
     individuals = MOCK_INDIVIDUALS.map((i) => ({ ...i }));
     postings = MOCK_POSTINGS.map((p) => ({ ...p }));
     nextId = 1000;
+    lsClear();
   },
 
   getUnits: () => [...units],
@@ -75,6 +111,8 @@ export const mockStore = {
       Editor: STAFF,
     };
     units = [...units, u];
+    lsSet(LS_KEYS.units, units);
+    lsSet(LS_KEYS.nextId, nextId);
     return id;
   },
   updateUnit(
@@ -96,9 +134,11 @@ export const mockStore = {
           }
         : u,
     );
+    lsSet(LS_KEYS.units, units);
   },
   deleteUnit(id: number): void {
     units = units.filter((u) => u.Id !== id);
+    lsSet(LS_KEYS.units, units);
   },
 
   // ─── ROLES ──────────────────────────────────────────────────────────────────
@@ -125,6 +165,8 @@ export const mockStore = {
       Editor: STAFF,
     };
     roles = [...roles, r];
+    lsSet(LS_KEYS.roles, roles);
+    lsSet(LS_KEYS.nextId, nextId);
     return id;
   },
   updateRole(
@@ -146,9 +188,11 @@ export const mockStore = {
           }
         : r,
     );
+    lsSet(LS_KEYS.roles, roles);
   },
   deleteRole(id: number): void {
     roles = roles.filter((r) => r.Id !== id);
+    lsSet(LS_KEYS.roles, roles);
   },
 
   // ─── INDIVIDUALS ────────────────────────────────────────────────────────────
@@ -171,6 +215,8 @@ export const mockStore = {
       Editor: STAFF,
     };
     individuals = [...individuals, i];
+    lsSet(LS_KEYS.individuals, individuals);
+    lsSet(LS_KEYS.nextId, nextId);
     return id;
   },
   updateIndividual(
@@ -180,9 +226,11 @@ export const mockStore = {
     individuals = individuals.map((i) =>
       i.Id === id ? { ...i, ...patch, Modified: NOW() } : i,
     );
+    lsSet(LS_KEYS.individuals, individuals);
   },
   deleteIndividual(id: number): void {
     individuals = individuals.filter((i) => i.Id !== id);
+    lsSet(LS_KEYS.individuals, individuals);
   },
 
   // ─── POSTINGS ───────────────────────────────────────────────────────────────
@@ -211,6 +259,8 @@ export const mockStore = {
       Editor: STAFF,
     };
     postings = [...postings, p];
+    lsSet(LS_KEYS.postings, postings);
+    lsSet(LS_KEYS.nextId, nextId);
     return id;
   },
   updatePosting(
@@ -235,8 +285,10 @@ export const mockStore = {
           }
         : p,
     );
+    lsSet(LS_KEYS.postings, postings);
   },
   deletePosting(id: number): void {
     postings = postings.filter((p) => p.Id !== id);
+    lsSet(LS_KEYS.postings, postings);
   },
 };
