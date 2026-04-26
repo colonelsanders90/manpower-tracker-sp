@@ -19,6 +19,8 @@ import { Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { downloadLog } from "@/lib/diagnosticLog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import logoOnNavy from "@/assets/raid/White_RAiD_onNavy.svg";
+import { mockStore } from "@/lib/mockStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 const SIDEBAR_WIDTH = 220;
 const APPBAR_HEIGHT = 52;
@@ -43,6 +45,15 @@ export function AppShell() {
 
   const routerState = useRouterState();
   const path = routerState.location.pathname;
+
+  const qc = useQueryClient();
+  const isDev = import.meta.env.DEV;
+  function resetMockData() {
+    if (!isDev) return;
+    if (!confirm("Reset the dev mock store back to the seed data?")) return;
+    mockStore.reset();
+    qc.invalidateQueries();
+  }
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
@@ -145,6 +156,34 @@ export function AppShell() {
           }}
         >
           {isAdmin ? "● HR Officer" : "Viewer"}
+          {isDev && (
+            <Box
+              component="button"
+              type="button"
+              onClick={resetMockData}
+              sx={{
+                display: "block",
+                mt: 1,
+                bgcolor: "transparent",
+                border: "1px solid rgba(255,255,255,0.25)",
+                color: "rgba(255,255,255,0.7)",
+                fontFamily: "inherit",
+                fontSize: 9,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                px: 1.25, py: 0.5,
+                borderRadius: 0.5,
+                cursor: "pointer",
+                "&:hover": {
+                  borderColor: "rgba(255,255,255,0.6)",
+                  color: "white",
+                },
+              }}
+              title="Resets the dev-only mock data store"
+            >
+              Reset mock data
+            </Box>
+          )}
         </Box>
       </Drawer>
 

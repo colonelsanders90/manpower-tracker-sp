@@ -40,6 +40,15 @@ function nextLookupTitle<T extends { Id: number; Title: string }>(
 }
 
 export const mockStore = {
+  /** Reset every list back to the seed data. Dev-only convenience. */
+  reset(): void {
+    units = MOCK_UNITS.map((u) => ({ ...u }));
+    roles = MOCK_ROLES.map((r) => ({ ...r }));
+    individuals = MOCK_INDIVIDUALS.map((i) => ({ ...i }));
+    postings = MOCK_POSTINGS.map((p) => ({ ...p }));
+    nextId = 1000;
+  },
+
   getUnits: () => [...units],
   getRoles: () => [...roles],
   getIndividuals: () => [...individuals],

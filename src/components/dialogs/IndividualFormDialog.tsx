@@ -6,15 +6,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControlLabel,
   Stack,
   Switch,
   TextField,
+  Typography,
 } from "@mui/material";
 import {
   useCreateIndividual,
   useUpdateIndividual,
 } from "@/hooks/useMutations";
+import { AdPersonPicker } from "@/components/AdPersonPicker";
 
 type IndividualEdit = {
   id: number;
@@ -91,6 +94,30 @@ export function IndividualFormDialog({ open, onClose, individual }: Props) {
       <DialogTitle>{isEdit ? "Edit individual" : "Add an individual"}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
+          {!isEdit && (
+            <>
+              <AdPersonPicker
+                onPick={(user) => {
+                  setName(user.name);
+                  if (user.email) setEmail(user.email);
+                }}
+              />
+              <Divider sx={{ my: 1 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontFamily: '"Geist Mono", monospace',
+                    fontSize: 10,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                  }}
+                >
+                  Or enter manually
+                </Typography>
+              </Divider>
+            </>
+          )}
           <TextField
             autoFocus
             label="Name"

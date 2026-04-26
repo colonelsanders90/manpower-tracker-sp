@@ -131,7 +131,17 @@ UI-layer code (Tailwind/shadcn) is rewritten in MUI but the structure is one-to-
       (DataGrid + add/edit/delete with FK-guard messages).
       Five MUI dialog components: UnitFormDialog, RoleFormDialog,
       PostingFormDialog, IndividualFormDialog, ConfirmDialog.
-- [ ] Phase 5 — people picker (Autocomplete + getSiteUsers/searchUsers)
-      to replace the manual individuals dropdown when assigning postings.
-- [ ] Phase 6 — diagnostics wiring (already templated)
-- [ ] Phase 7 — single-file build + first deploy
+- [x] Phase 5 — AD people picker on + Add individual.
+      Uses searchUsers() (ClientPeoplePickerWebServiceInterface) with a
+      300ms debounce. JSOM-gated via isJsomAvailable() — invisible in
+      dev, falls back to manual entry on JSOM error in prod with a
+      friendly inline alert. Selecting a result auto-fills name + email.
+- [x] Phase 6 — diagnostics. ErrorBoundary, GlobalErrorDialog,
+      window.onerror + unhandledrejection, downloadLog button in the
+      AppBar. Three layers of capture per the workspace spec.
+- [x] Phase 7 — first-deploy guide + dev mock-reset affordance.
+      README documents npm run build → upload dist/index.html → admin
+      visits #/admin/provision → optional HR Officers SP group for
+      list-level Contribute. AppShell footer carries a dev-only
+      "Reset mock data" button so HR can iterate on CRUD without a
+      page reload.
