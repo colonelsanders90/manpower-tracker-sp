@@ -4,6 +4,8 @@ import { useUnits } from "@/hooks/useUnits";
 import { useRoles } from "@/hooks/useRoles";
 import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
+import { FilledRolesDonut } from "@/components/FilledRolesDonut";
+import { UpcomingMovements } from "@/components/UpcomingMovements";
 import { LoadingBlock, ErrorBlock } from "./_shared";
 
 const NAVY = "#01219C";
@@ -28,14 +30,24 @@ export function DashboardPage() {
   const i = individuals.data ?? [];
   const p = postings.data ?? [];
 
+  // Filled = roles with a Current posting. We don't trust the IsVacant flag
+  // on its own (it's a cached derivation; Phase 4 keeps it in sync, but the
+  // canonical signal is the postings list).
+  const filledRoleIds = new Set<number>();
+  for (const post of p) if (post.Status === "Current") filledRoleIds.add(post.RoleId);
+
+  const internalRoles = r.filter((x) => !x.IsExternal);
+  const filled = internalRoles.filter((x) => filledRoleIds.has(x.Id)).length;
+  const vacant = internalRoles.length - filled;
+
   const counts = {
     units: u.length,
-    roles: r.length,
+    roles: internalRoles.length,
     individuals: i.length,
     current: p.filter((x) => x.Status === "Current").length,
     planned: p.filter((x) => x.Status === "Planned").length,
     candidate: p.filter((x) => x.Status === "Candidate").length,
-    vacant: r.filter((x) => x.IsVacant).length,
+    vacant,
   };
 
   return (
@@ -95,6 +107,7 @@ export function DashboardPage() {
             display: "grid",
             gap: 1.5,
             gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
+            mb: 2,
           }}
         >
           <Stat label="Current postings" value={counts.current} />
@@ -105,6 +118,16 @@ export function DashboardPage() {
             value={counts.vacant}
             accent={counts.vacant > 0}
           />
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: { xs: "1fr", md: "minmax(280px, 1fr) 2fr" },
+          }}
+        >
+          <FilledRolesDonut filled={filled} total={internalRoles.length} />
+          <UpcomingMovements postings={p} roles={r} individuals={i} />
         </Box>
       </Box>
     </Stack>
