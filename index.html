@@ -25,14 +25,12 @@
     Scripts 4–8 are only needed if your app uses searchUsers(). If not,
     they can be removed — they are harmless but add ~50kb of parse overhead.
   -->
-  <script src="/_layouts/15/MicrosoftAjax.js"></script>
-  <script src="/_layouts/15/sp.runtime.js"></script>
-  <script src="/_layouts/15/sp.js"></script>
-  <script src="/_layouts/15/init.js"></script>
-  <script src="/_layouts/15/clienttemplates.js"></script>
-  <script src="/_layouts/15/autofill.js"></script>
-  <script src="/_layouts/15/clientforms.js"></script>
-  <script src="/_layouts/15/clientpeoplepicker.js"></script>
+  <!--
+    JSOM scripts removed from startup load — MicrosoftAjax.js patches
+    Array/Object prototypes before React boots, breaking the reconciler.
+    Loaded lazily instead: provisioning page loads them on demand via
+    loadJsom() in jsom.ts before any JSOM call is made.
+  -->
 </head>
 <body>
   <div id="root"></div>

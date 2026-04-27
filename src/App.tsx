@@ -12,9 +12,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import {
   Alert, Box, Button, CircularProgress, Paper, Typography,
 } from '@mui/material'
-import { setApiBase } from './lib/sharepoint'
-import { isJsomAvailable, getWebServerRelativeUrl } from './lib/jsom'
-import { log, downloadLog } from './lib/diagnosticLog'
+import { downloadLog } from './lib/diagnosticLog'
 import { router } from './router'
 
 type StartupState =
@@ -29,25 +27,11 @@ export default function App() {
 
   useEffect(() => {
     if (import.meta.env.DEV) return
-
-    // If JSOM hasn't loaded (e.g. local preview, non-SP host) skip the dynamic
-    // URL resolution — VITE_SP_API_BASE is already set as the default in
-    // sharepoint.ts, so REST calls will target the correct subsite.
-    if (!isJsomAvailable()) {
-      setStartup({ phase: 'ready' })
-      return
-    }
-
-    getWebServerRelativeUrl()
-      .then(url => {
-        setApiBase(url)
-        setStartup({ phase: 'ready' })
-      })
-      .catch(err => {
-        const message = err instanceof Error ? err.message : String(err)
-        log('error', `Startup failed: ${message}`, err instanceof Error ? err.stack : undefined)
-        setStartup({ phase: 'error', message })
-      })
+    // VITE_SP_API_BASE is already baked in as the sharepoint.ts default at
+    // build time — no JSOM startup call needed. JSOM scripts are loaded lazily
+    // by the provisioning page to avoid MicrosoftAjax.js patching prototypes
+    // before React boots (which breaks the reconciler).
+    setStartup({ phase: 'ready' })
   }, [])
 
   if (startup.phase === 'loading') {
