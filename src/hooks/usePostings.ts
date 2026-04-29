@@ -10,7 +10,7 @@ export function usePostings() {
   return useQuery({
     queryKey: POSTINGS_KEY,
     queryFn: async (): Promise<PostingListItem[]> => {
-      if (import.meta.env.DEV) return mockStore.getPostings();
+      if ((import.meta.env.MODE !== 'production')) return mockStore.getPostings();
       // spGetAll handles the 5,000-item threshold per the workspace CLAUDE.md.
       return spGetAll<PostingListItem>(
         `/lists/getbytitle('${POSTINGS_LIST}')/items?$expand=Individual,Role&$orderby=StartDate`,

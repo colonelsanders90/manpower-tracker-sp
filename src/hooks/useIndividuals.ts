@@ -10,7 +10,7 @@ export function useIndividuals() {
   return useQuery({
     queryKey: INDIVIDUALS_KEY,
     queryFn: async (): Promise<IndividualListItem[]> => {
-      if (import.meta.env.DEV) return mockStore.getIndividuals();
+      if ((import.meta.env.MODE !== 'production')) return mockStore.getIndividuals();
       return spGetAll<IndividualListItem>(
         `/lists/getbytitle('${INDIVIDUALS_LIST}')/items?$orderby=Title`,
       );

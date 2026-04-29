@@ -22,11 +22,11 @@ type StartupState =
 
 export default function App() {
   const [startup, setStartup] = useState<StartupState>(
-    import.meta.env.DEV ? { phase: 'ready' } : { phase: 'loading' }
+    (import.meta.env.MODE !== 'production') ? { phase: 'ready' } : { phase: 'loading' }
   )
 
   useEffect(() => {
-    if (import.meta.env.DEV) return
+    if ((import.meta.env.MODE !== 'production')) return
     // VITE_SP_API_BASE is already baked in as the sharepoint.ts default at
     // build time — no JSOM startup call needed. JSOM scripts are loaded lazily
     // by the provisioning page to avoid MicrosoftAjax.js patching prototypes

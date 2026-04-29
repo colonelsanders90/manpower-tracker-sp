@@ -10,7 +10,7 @@ export function useRoles() {
   return useQuery({
     queryKey: ROLES_KEY,
     queryFn: async (): Promise<RoleListItem[]> => {
-      if (import.meta.env.DEV) return mockStore.getRoles();
+      if ((import.meta.env.MODE !== 'production')) return mockStore.getRoles();
       return spGetAll<RoleListItem>(
         `/lists/getbytitle('${ROLES_LIST}')/items?$expand=Unit&$orderby=Title`,
       );

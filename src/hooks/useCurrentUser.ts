@@ -11,7 +11,7 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: CURRENT_USER_KEY,
     queryFn: async (): Promise<CurrentUser> => {
-      if (import.meta.env.DEV) {
+      if ((import.meta.env.MODE !== 'production')) {
         return {
           Id: 1,
           Title: "Dev User, HR Officer, RAiD",

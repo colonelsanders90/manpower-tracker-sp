@@ -29,7 +29,7 @@ import {
 } from "@/types/postings";
 import { mockStore } from "./mockStore";
 
-const IS_DEV = import.meta.env.DEV;
+const IS_DEV = (import.meta.env.MODE !== 'production');
 
 // ─── Read paths ────────────────────────────────────────────────────────────────
 

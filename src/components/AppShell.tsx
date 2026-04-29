@@ -47,7 +47,7 @@ export function AppShell() {
   const path = routerState.location.pathname;
 
   const qc = useQueryClient();
-  const isDev = import.meta.env.DEV;
+  const isDev = (import.meta.env.MODE !== 'production');
   function resetMockData() {
     if (!isDev) return;
     if (!confirm("Reset the dev mock store back to the seed data?")) return;

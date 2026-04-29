@@ -10,7 +10,7 @@ export function useUnits() {
   return useQuery({
     queryKey: UNITS_KEY,
     queryFn: async (): Promise<UnitListItem[]> => {
-      if (import.meta.env.DEV) return mockStore.getUnits();
+      if ((import.meta.env.MODE !== 'production')) return mockStore.getUnits();
       // $expand the self-referential ParentUnit so we get { Id, Title }
       // rather than just ParentUnitId.
       return spGetAll<UnitListItem>(
