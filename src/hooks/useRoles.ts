@@ -12,7 +12,7 @@ export function useRoles() {
     queryFn: async (): Promise<RoleListItem[]> => {
       if ((import.meta.env.MODE !== 'production')) return mockStore.getRoles();
       return spGetAll<RoleListItem>(
-        `/lists/getbytitle('${ROLES_LIST}')/items?$expand=Unit&$orderby=Title`,
+        `/lists/getbytitle('${ROLES_LIST}')/items?$select=*,Unit/Id,Unit/Title&$expand=Unit&$orderby=Title`,
       );
     },
     staleTime: 5 * 60_000,

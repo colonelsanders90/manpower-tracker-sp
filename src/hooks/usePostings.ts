@@ -13,7 +13,7 @@ export function usePostings() {
       if ((import.meta.env.MODE !== 'production')) return mockStore.getPostings();
       // spGetAll handles the 5,000-item threshold per the workspace CLAUDE.md.
       return spGetAll<PostingListItem>(
-        `/lists/getbytitle('${POSTINGS_LIST}')/items?$expand=Individual,Role&$orderby=StartDate`,
+        `/lists/getbytitle('${POSTINGS_LIST}')/items?$select=*,Individual/Id,Individual/Title,Role/Id,Role/Title&$expand=Individual,Role&$orderby=StartDate`,
       );
     },
     staleTime: 5 * 60_000,

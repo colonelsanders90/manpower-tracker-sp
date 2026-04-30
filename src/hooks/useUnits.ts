@@ -11,10 +11,9 @@ export function useUnits() {
     queryKey: UNITS_KEY,
     queryFn: async (): Promise<UnitListItem[]> => {
       if ((import.meta.env.MODE !== 'production')) return mockStore.getUnits();
-      // $expand the self-referential ParentUnit so we get { Id, Title }
-      // rather than just ParentUnitId.
+      // SP 2013 requires explicit $select when using $expand on lookup fields.
       return spGetAll<UnitListItem>(
-        `/lists/getbytitle('${UNITS_LIST}')/items?$expand=ParentUnit&$orderby=Title`,
+        `/lists/getbytitle('${UNITS_LIST}')/items?$select=*,ParentUnit/Id,ParentUnit/Title&$expand=ParentUnit&$orderby=Title`,
       );
     },
     staleTime: 5 * 60_000,
