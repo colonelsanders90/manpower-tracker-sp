@@ -73,6 +73,9 @@ async function addLookupField(
   required = false,
 ): Promise<void> {
   const targetGuid = await getListGuid(targetListTitle);
+  // RelationshipDeleteBehavior="Restrict" requires the field to be indexed
+  // first, which isn't possible at field-creation time in SP 2013. Omitting
+  // it — the app's own invariants in lib/invariants.ts enforce FK safety.
   const xml = `
     <Field
       Type="Lookup"
@@ -80,7 +83,6 @@ async function addLookupField(
       Required="${required}"
       List="${targetGuid}"
       ShowField="Title"
-      RelationshipDeleteBehavior="Restrict"
     />
   `;
   await addFieldAsXml(listTitle, xml);
