@@ -8,7 +8,7 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 
 // RAiD brand fonts. Imported here so vite-plugin-singlefile inlines the
@@ -28,11 +28,35 @@ import App from './App'
 import { theme } from './theme'
 import ErrorBoundary from './components/ErrorBoundary'
 import GlobalErrorDialog from './components/GlobalErrorDialog'
-import { init as initDiagnosticLog } from './lib/diagnosticLog'
+import { init as initDiagnosticLog, log } from './lib/diagnosticLog'
 
 initDiagnosticLog()
 
-const queryClient = new QueryClient()
+// Route all TanStack Query failures through diagnosticLog so they appear in
+// the downloaded log file. TanStack Query v5 catches promise rejections
+// internally — they never reach window.unhandledrejection — so without these
+// handlers, query/mutation errors are silently swallowed in the log.
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      log(
+        'error',
+        `Query failed [${String(query.queryKey)}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error, _vars, _ctx, mutation) => {
+      const key = mutation.options.mutationKey ? String(mutation.options.mutationKey) : '(unnamed)';
+      log(
+        'error',
+        `Mutation failed [${key}]: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    },
+  }),
+})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

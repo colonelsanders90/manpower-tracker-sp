@@ -21,6 +21,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import logoOnNavy from "@/assets/raid/White_RAiD_onNavy.svg";
 import { mockStore } from "@/lib/mockStore";
 import { useQueryClient } from "@tanstack/react-query";
+import { APP_VERSION } from "@/version";
 
 const SIDEBAR_WIDTH = 220;
 const APPBAR_HEIGHT = 52;
@@ -236,6 +237,21 @@ export function AppShell() {
               }}
             >
               {isAdmin ? "HR Officer · Admin" : "Viewer"}
+            </Box>
+            <Box
+              sx={{
+                ml: 2,
+                px: 1,
+                py: 0.25,
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 0.5,
+                color: "rgba(255,255,255,0.4)",
+                fontFamily: '"Geist Mono", "SF Mono", monospace',
+                fontSize: 10,
+                letterSpacing: "0.08em",
+              }}
+            >
+              {APP_VERSION}
             </Box>
           </Toolbar>
         </AppBar>
