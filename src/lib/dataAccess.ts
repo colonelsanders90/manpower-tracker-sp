@@ -35,29 +35,30 @@ const IS_DEV = (import.meta.env.MODE !== 'production');
 
 async function getUnits(): Promise<UnitListItem[]> {
   if (IS_DEV) return mockStore.getUnits();
+  // SP 2013: $select=* is required alongside $expand, otherwise 400.
   return spGetAll<UnitListItem>(
-    `/lists/getbytitle('${UNITS_LIST}')/items?$expand=ParentUnit`,
+    `/lists/getbytitle('${UNITS_LIST}')/items?$select=*,ParentUnit/Id,ParentUnit/Title&$expand=ParentUnit`,
   );
 }
 
 async function getRoles(): Promise<RoleListItem[]> {
   if (IS_DEV) return mockStore.getRoles();
   return spGetAll<RoleListItem>(
-    `/lists/getbytitle('${ROLES_LIST}')/items?$expand=Unit`,
+    `/lists/getbytitle('${ROLES_LIST}')/items?$select=*,Unit/Id,Unit/Title&$expand=Unit`,
   );
 }
 
 async function getIndividuals(): Promise<IndividualListItem[]> {
   if (IS_DEV) return mockStore.getIndividuals();
   return spGetAll<IndividualListItem>(
-    `/lists/getbytitle('${INDIVIDUALS_LIST}')/items`,
+    `/lists/getbytitle('${INDIVIDUALS_LIST}')/items?$select=*`,
   );
 }
 
 async function getPostings(): Promise<PostingListItem[]> {
   if (IS_DEV) return mockStore.getPostings();
   return spGetAll<PostingListItem>(
-    `/lists/getbytitle('${POSTINGS_LIST}')/items?$expand=Individual,Role`,
+    `/lists/getbytitle('${POSTINGS_LIST}')/items?$select=*,Individual/Id,Individual/Title,Role/Id,Role/Title&$expand=Individual,Role`,
   );
 }
 
