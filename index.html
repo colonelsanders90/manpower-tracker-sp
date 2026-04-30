@@ -33,6 +33,21 @@
   -->
 </head>
 <body>
+  <!-- Early error display — runs before React, visible without DevTools.
+       Shows any crash as plain text on screen instead of a blank page. -->
+  <div id="early-error" style="display:none;font-family:monospace;padding:24px;background:#fff;color:#c00;white-space:pre-wrap;font-size:13px;border:2px solid #c00;margin:24px;border-radius:6px"></div>
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      var box = document.getElementById('early-error');
+      box.style.display = 'block';
+      box.textContent = 'ERROR: ' + msg + '\nSource: ' + src + '\nLine: ' + line + ':' + col + (err && err.stack ? '\n\n' + err.stack : '');
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      var box = document.getElementById('early-error');
+      box.style.display = 'block';
+      box.textContent = (box.textContent || '') + '\nUNHANDLED PROMISE: ' + (e.reason && e.reason.stack ? e.reason.stack : String(e.reason));
+    });
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
