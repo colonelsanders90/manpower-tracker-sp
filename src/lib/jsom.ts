@@ -5,31 +5,15 @@ export function isJsomAvailable(): boolean {
   try { return typeof SP !== 'undefined' } catch { return false }
 }
 
-// Lazily injects JSOM scripts in dependency order. Safe to call multiple
-// times — skips scripts that are already present in the DOM. Resolves once
-// all scripts have loaded, rejects on any load failure.
-let jsomLoadPromise: Promise<void> | null = null
-
-export function loadJsom(): Promise<void> {
-  if (jsomLoadPromise) return jsomLoadPromise
-
-  const SCRIPTS = [
-    '/_layouts/15/MicrosoftAjax.js',
-    '/_layouts/15/sp.runtime.js',
-    '/_layouts/15/sp.js',
-    '/_layouts/15/init.js',
-    '/_layouts/15/clienttemplates.js',
-    '/_layouts/15/autofill.js',
-    '/_layouts/15/clientforms.js',
-    '/_layouts/15/clientpeoplepicker.js',
-  ]
-
-  jsomLoadPromise = SCRIPTS.reduce<Promise<void>>(
+// Lazily injects a list of scripts in strict dependency order.
+// Skips any script already present in the DOM. Returns a promise that
+// resolves once all scripts have loaded.
+function loadScripts(srcs: string[]): Promise<void> {
+  return srcs.reduce<Promise<void>>(
     (chain, src) =>
       chain.then(
         () =>
           new Promise<void>((resolve, reject) => {
-            // Skip if already in DOM
             if (document.querySelector(`script[src="${src}"]`)) {
               resolve()
               return
@@ -43,8 +27,43 @@ export function loadJsom(): Promise<void> {
       ),
     Promise.resolve(),
   )
+}
 
-  return jsomLoadPromise
+// Core JSOM — MicrosoftAjax + SP runtime + SP JSOM core.
+// Required for list management, permissions, and most JSOM operations.
+// clienttemplates.js and friends are intentionally excluded — they call
+// InitListViewStrings() which references a `Strings` global that only
+// exists in a full SharePoint master-page context, not a standalone HTML.
+let jsomCorePromise: Promise<void> | null = null
+
+export function loadJsom(): Promise<void> {
+  if (jsomCorePromise) return jsomCorePromise
+  jsomCorePromise = loadScripts([
+    '/_layouts/15/MicrosoftAjax.js',
+    '/_layouts/15/sp.runtime.js',
+    '/_layouts/15/sp.js',
+  ])
+  return jsomCorePromise
+}
+
+// People-picker JSOM — extends core with the ClientPeoplePicker namespace.
+// Load this (after loadJsom()) only when the AD people picker is needed.
+// Requires init.js → clienttemplates.js → autofill.js → clientforms.js →
+// clientpeoplepicker.js in strict order.
+let jsomPeoplePickerPromise: Promise<void> | null = null
+
+export function loadJsomPeoplePicker(): Promise<void> {
+  if (jsomPeoplePickerPromise) return jsomPeoplePickerPromise
+  jsomPeoplePickerPromise = loadJsom().then(() =>
+    loadScripts([
+      '/_layouts/15/init.js',
+      '/_layouts/15/clienttemplates.js',
+      '/_layouts/15/autofill.js',
+      '/_layouts/15/clientforms.js',
+      '/_layouts/15/clientpeoplepicker.js',
+    ]),
+  )
+  return jsomPeoplePickerPromise
 }
 
 // Promisify SP's callback-based executeQueryAsync
