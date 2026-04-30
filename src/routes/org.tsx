@@ -1,4 +1,4 @@
-import { Stack, Box, Typography } from "@mui/material";
+import { Stack, Box, Typography, Alert, Button } from "@mui/material";
 import { useUnits } from "@/hooks/useUnits";
 import { useRoles } from "@/hooks/useRoles";
 import { useIndividuals } from "@/hooks/useIndividuals";
@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { buildUnitTree } from "@/lib/hierarchy";
 import { OrgChart } from "@/components/OrgChart";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
+import { Link } from "@tanstack/react-router";
 
 export function OrgPage() {
   const units = useUnits();
@@ -33,6 +34,33 @@ export function OrgPage() {
   const p = postings.data ?? [];
 
   const tree = buildUnitTree(u, r);
+
+  // Empty state — no units seeded yet
+  if (u.length === 0) {
+    return (
+      <Stack spacing={4}>
+        <PageHeader
+          overline="Manpower · Organisation"
+          title={<>RA<span style={{ textTransform: "lowercase" }}>i</span>D Org Structure</>}
+          blurb=""
+        />
+        <Alert
+          severity="info"
+          action={
+            isAdmin ? (
+              <Button component={Link} to="/admin/provision" color="inherit" size="small">
+                Go to Provision
+              </Button>
+            ) : undefined
+          }
+        >
+          {isAdmin
+            ? "No org structure yet. Run provisioning then seed the RAiD structure from Admin · Provision."
+            : "No org structure has been set up yet. Contact your HR admin."}
+        </Alert>
+      </Stack>
+    );
+  }
 
   // Per-role current incumbent + pending count
   const incumbents = new Map<number, (typeof i)[number]>();

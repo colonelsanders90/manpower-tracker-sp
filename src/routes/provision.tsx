@@ -33,9 +33,14 @@ import {
   runProvisioning,
   type ProvisioningStepResult,
 } from "@/provisioning/provisioningSequence";
+import {
+  SEED_STEP_NAMES,
+  runSeed,
+  type SeedStepResult,
+} from "@/provisioning/seedSequence";
 
-type StepState = "pending" | "running" | "ok" | "error";
-type StepUi = { name: string; state: StepState; error?: string };
+type StepState = "pending" | "running" | "ok" | "skip" | "error";
+type StepUi = { name: string; state: StepState; detail?: string };
 
 export function ProvisionPage() {
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
@@ -44,10 +49,16 @@ export function ProvisionPage() {
   const [jsomError, setJsomError] = useState<string | null>(null);
 
   const [steps, setSteps] = useState<StepUi[]>(() =>
-    PROVISIONERS.map((p) => ({ name: p.name, state: "pending" })),
+    PROVISIONERS.map((p) => ({ name: p.name, state: "pending" as StepState })),
   );
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+
+  const [seedSteps, setSeedSteps] = useState<StepUi[]>(() =>
+    SEED_STEP_NAMES.map((name) => ({ name, state: "pending" as StepState })),
+  );
+  const [seedRunning, setSeedRunning] = useState(false);
+  const [seedDone, setSeedDone] = useState(false);
 
   // Load JSOM scripts lazily — they must NOT be in index.html because
   // MicrosoftAjax.js patches prototypes before React boots. Loading here
@@ -113,7 +124,7 @@ export function ProvisionPage() {
           idx === i
             ? r.status === "ok"
               ? { ...s, state: "ok" }
-              : { ...s, state: "error", error: r.error }
+              : { ...s, state: "error", detail: r.error }
             : s,
         ),
       );
@@ -136,6 +147,41 @@ export function ProvisionPage() {
     await runProvisioning(handleProgress);
     setRunning(false);
     setDone(true);
+  }
+
+  async function startSeed() {
+    setSeedRunning(true);
+    setSeedDone(false);
+    setSeedSteps((prev) => prev.map((s) => ({ ...s, state: "pending" as StepState })));
+
+    let i = 0;
+    const handleSeedProgress = (r: SeedStepResult) => {
+      setSeedSteps((prev) =>
+        prev.map((s, idx) =>
+          idx === i
+            ? r.status === "ok"
+              ? { ...s, state: "ok" }
+              : r.status === "skip"
+                ? { ...s, state: "skip", detail: r.reason }
+                : { ...s, state: "error", detail: r.error }
+            : s,
+        ),
+      );
+      i++;
+      setSeedSteps((prev) =>
+        prev.map((s, idx) =>
+          idx === i && s.state === "pending" ? { ...s, state: "running" } : s,
+        ),
+      );
+    };
+
+    setSeedSteps((prev) =>
+      prev.map((s, idx) => (idx === 0 ? { ...s, state: "running" } : s)),
+    );
+
+    await runSeed(handleSeedProgress);
+    setSeedRunning(false);
+    setSeedDone(true);
   }
 
   const allOk = done && steps.every((s) => s.state === "ok");
@@ -169,7 +215,7 @@ export function ProvisionPage() {
                 </ListItemIcon>
                 <ListItemText
                   primary={s.name}
-                  secondary={s.state === "error" ? s.error : null}
+                  secondary={s.state === "error" ? s.detail : null}
                   primaryTypographyProps={{
                     sx: { fontFamily: "Sometype Mono, monospace" },
                   }}
@@ -196,16 +242,83 @@ export function ProvisionPage() {
 
           {allOk && (
             <Alert severity="success" sx={{ mt: 3 }}>
-              All four lists provisioned. Schema version {SCHEMA_VERSION} is
-              now live. Visit the dashboard to start populating data.
+              All four lists provisioned. Scroll down to seed the RAiD org structure.
             </Alert>
           )}
           {failedAt && (
             <Alert severity="error" sx={{ mt: 3 }}>
               Provisioning halted at <strong>{failedAt.name}</strong>:{" "}
-              {failedAt.error}. Earlier lists were created successfully — you
+              {failedAt.detail}. Earlier lists were created successfully — you
               may need to delete and re-create them via SharePoint admin
               before retrying.
+            </Alert>
+          )}
+        </Paper>
+
+        {/* ── Step 2: seed the RAiD org structure ── */}
+        <Box>
+          <Typography variant="h5" sx={{ mt: 1 }}>
+            Seed RAiD structure
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Creates the RAiD root unit and all 11 branches in the UNITS list.
+            Run once, immediately after provisioning. Safe to inspect — aborts
+            automatically if UNITS already has rows.
+          </Typography>
+        </Box>
+
+        <Paper sx={{ p: 3 }}>
+          <List dense>
+            {seedSteps.map((s) => (
+              <ListItem key={s.name} sx={{ alignItems: "flex-start" }}>
+                <ListItemIcon sx={{ minWidth: 36, pt: 0.5 }}>
+                  <StepIcon state={s.state} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={s.name}
+                  secondary={
+                    s.state === "error" || s.state === "skip" ? s.detail : null
+                  }
+                  primaryTypographyProps={{
+                    sx: { fontFamily: "Sometype Mono, monospace" },
+                  }}
+                  secondaryTypographyProps={{
+                    color: s.state === "error" ? "error" : "text.secondary",
+                  }}
+                />
+              </ListItem>
+            ))}
+          </List>
+
+          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              disabled={seedRunning || !allOk}
+              onClick={startSeed}
+            >
+              {seedRunning
+                ? "Seeding…"
+                : seedDone
+                  ? "Re-run seed"
+                  : "Seed RAiD structure"}
+            </Button>
+            {seedRunning && <CircularProgress size={28} />}
+          </Stack>
+
+          {!allOk && (
+            <Alert severity="info" sx={{ mt: 3 }}>
+              Run provisioning first to create the lists, then seed.
+            </Alert>
+          )}
+          {seedDone && seedSteps.every((s) => s.state === "ok") && (
+            <Alert severity="success" sx={{ mt: 3 }}>
+              RAiD structure seeded — 1 root unit + 11 branches. Go to{" "}
+              <strong>Org Structure</strong> to add roles to each branch.
+            </Alert>
+          )}
+          {seedDone && seedSteps.some((s) => s.state === "skip") && (
+            <Alert severity="warning" sx={{ mt: 3 }}>
+              Seed skipped — UNITS list already has data.
             </Alert>
           )}
         </Paper>
@@ -218,6 +331,7 @@ function StepIcon({ state }: { state: StepState }) {
   if (state === "ok") return <CheckCircleIcon fontSize="small" color="success" />;
   if (state === "error") return <ErrorIcon fontSize="small" color="error" />;
   if (state === "running") return <CircularProgress size={16} />;
+  if (state === "skip") return <HourglassIcon fontSize="small" color="warning" />;
   return <HourglassIcon fontSize="small" sx={{ color: "text.disabled" }} />;
 }
 
