@@ -296,7 +296,11 @@ export function PostingFormDialog({
             </FormControl>
             <TextField
               type="date"
-              label={status === "Past" ? "Start date" : "Posted-in date"}
+              label={
+                status === "Past" ? "Start date" :
+                status === "Current" ? "Posted-in date" :
+                "Proposed posting date"
+              }
               InputLabelProps={{ shrink: true }}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -308,7 +312,11 @@ export function PostingFormDialog({
           {showEnd ? (
             <TextField
               type="date"
-              label={`End date${status === "Past" ? "" : " (optional)"}`}
+              label={
+                status === "Past" ? "End date" :
+                status === "Planned" || status === "Candidate" ? "Projected end date (optional)" :
+                "End date (optional)"
+              }
               InputLabelProps={{ shrink: true }}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
