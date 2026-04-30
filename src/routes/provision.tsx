@@ -8,7 +8,7 @@
 // and finishes with a green "Provisioning complete (SCHEMA_VERSION=N)" or a
 // red panel with the failed list and error message.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Alert,
   Box,
@@ -25,9 +25,8 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorIcon from "@mui/icons-material/ErrorOutline";
 import HourglassIcon from "@mui/icons-material/HourglassEmpty";
-import { useQuery } from "@tanstack/react-query";
-import { spGet, type CurrentUser } from "@/lib/sharepoint";
-import { isJsomAvailable } from "@/lib/jsom";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { loadJsom } from "@/lib/jsom";
 import {
   PROVISIONERS,
   SCHEMA_VERSION,
@@ -39,16 +38,29 @@ type StepState = "pending" | "running" | "ok" | "error";
 type StepUi = { name: string; state: StepState; error?: string };
 
 export function ProvisionPage() {
-  const { data: currentUser, isLoading: userLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => spGet<CurrentUser>("/web/currentuser"),
-  });
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+
+  const [jsomReady, setJsomReady] = useState(false);
+  const [jsomError, setJsomError] = useState<string | null>(null);
 
   const [steps, setSteps] = useState<StepUi[]>(() =>
     PROVISIONERS.map((p) => ({ name: p.name, state: "pending" })),
   );
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Load JSOM scripts lazily — they must NOT be in index.html because
+  // MicrosoftAjax.js patches prototypes before React boots. Loading here
+  // (after React is already running) is safe.
+  useEffect(() => {
+    if ((import.meta.env.MODE !== 'production')) {
+      // Dev / demo mode — JSOM not available, show a friendly message.
+      return;
+    }
+    loadJsom()
+      .then(() => setJsomReady(true))
+      .catch((err) => setJsomError(err instanceof Error ? err.message : String(err)));
+  }, []);
 
   if (userLoading) {
     return <Centered><CircularProgress /></Centered>;
@@ -58,21 +70,34 @@ export function ProvisionPage() {
     return (
       <Centered>
         <Alert severity="warning">
-          Only site administrators can run provisioning.
+          You need Full Control or Design permission on this site to run provisioning.
         </Alert>
       </Centered>
     );
   }
 
-  if (!isJsomAvailable()) {
+  if ((import.meta.env.MODE !== 'production')) {
     return (
       <Centered>
         <Alert severity="info">
-          Provisioning needs JSOM, which isn&apos;t available in dev mode.
-          Build and deploy to SharePoint first, then run this route.
+          Provisioning is not available in demo mode — it requires a live SharePoint server.
         </Alert>
       </Centered>
     );
+  }
+
+  if (jsomError) {
+    return (
+      <Centered>
+        <Alert severity="error">
+          Failed to load SharePoint JSOM scripts: {jsomError}
+        </Alert>
+      </Centered>
+    );
+  }
+
+  if (!jsomReady) {
+    return <Centered><CircularProgress /><Typography sx={{ ml: 2 }}>Loading SharePoint scripts…</Typography></Centered>;
   }
 
   async function start() {

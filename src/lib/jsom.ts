@@ -5,6 +5,48 @@ export function isJsomAvailable(): boolean {
   try { return typeof SP !== 'undefined' } catch { return false }
 }
 
+// Lazily injects JSOM scripts in dependency order. Safe to call multiple
+// times — skips scripts that are already present in the DOM. Resolves once
+// all scripts have loaded, rejects on any load failure.
+let jsomLoadPromise: Promise<void> | null = null
+
+export function loadJsom(): Promise<void> {
+  if (jsomLoadPromise) return jsomLoadPromise
+
+  const SCRIPTS = [
+    '/_layouts/15/MicrosoftAjax.js',
+    '/_layouts/15/sp.runtime.js',
+    '/_layouts/15/sp.js',
+    '/_layouts/15/init.js',
+    '/_layouts/15/clienttemplates.js',
+    '/_layouts/15/autofill.js',
+    '/_layouts/15/clientforms.js',
+    '/_layouts/15/clientpeoplepicker.js',
+  ]
+
+  jsomLoadPromise = SCRIPTS.reduce<Promise<void>>(
+    (chain, src) =>
+      chain.then(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            // Skip if already in DOM
+            if (document.querySelector(`script[src="${src}"]`)) {
+              resolve()
+              return
+            }
+            const s = document.createElement('script')
+            s.src = src
+            s.onload = () => resolve()
+            s.onerror = () => reject(new Error(`Failed to load ${src}`))
+            document.head.appendChild(s)
+          }),
+      ),
+    Promise.resolve(),
+  )
+
+  return jsomLoadPromise
+}
+
 // Promisify SP's callback-based executeQueryAsync
 export function executeQuery(ctx: any): Promise<void> {
   return new Promise((resolve, reject) => {
