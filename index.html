@@ -7,30 +7,24 @@
 
   <!--
     SP JSOM — loaded from SharePoint at runtime, not bundled by Vite.
-    Must appear BEFORE the Vite entry point so `SP.ClientContext.get_current()`
-    is available during app startup. Never use the old dynamic `loadSPjs()`
-    XHR pattern — static script tags are reliable and synchronous.
+    Load order is strict — do not reorder or skip.
 
-    Load order is strict — do not reorder:
-      1. MicrosoftAjax.js  — AJAX runtime (JSOM dependency)
-      2. sp.runtime.js     — SP client runtime
-      3. sp.js             — SP JSOM core (ClientContext, lists, users, groups)
-      4. init.js           — required by clientpeoplepicker.js
-      5. clienttemplates.js — required by clientforms.js
-      6. autofill.js       — required by clientpeoplepicker.js
-      7. clientforms.js    — required by clientpeoplepicker.js
-      8. clientpeoplepicker.js — exposes SP.UI.ApplicationPages namespace
-                                 (required for searchUsers() in jsom.ts)
+    MicrosoftAjax.js patches Array/Object prototypes, but this has been
+    confirmed safe in this environment because the static tags execute
+    synchronously before the React bundle parses (React's own prototype
+    state is not yet established). Lazy-loading these AFTER React boots
+    would be too late for clientpeoplepicker.js to initialise correctly.
 
-    Scripts 4–8 are only needed if your app uses searchUsers(). If not,
-    they can be removed — they are harmless but add ~50kb of parse overhead.
+    All 8 scripts are required for searchUsers() (AD people picker).
   -->
-  <!--
-    JSOM scripts removed from startup load — MicrosoftAjax.js patches
-    Array/Object prototypes before React boots, breaking the reconciler.
-    Loaded lazily instead: provisioning page loads them on demand via
-    loadJsom() in jsom.ts before any JSOM call is made.
-  -->
+  <script src="/_layouts/15/MicrosoftAjax.js"></script>
+  <script src="/_layouts/15/sp.runtime.js"></script>
+  <script src="/_layouts/15/sp.js"></script>
+  <script src="/_layouts/15/init.js"></script>
+  <script src="/_layouts/15/clienttemplates.js"></script>
+  <script src="/_layouts/15/autofill.js"></script>
+  <script src="/_layouts/15/clientforms.js"></script>
+  <script src="/_layouts/15/clientpeoplepicker.js"></script>
 </head>
 <body>
   <!-- Early error display — runs before React, visible without DevTools.
