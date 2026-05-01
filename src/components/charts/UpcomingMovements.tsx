@@ -7,6 +7,7 @@
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "../shared/StatusBadge";
+import { formatName } from "@/lib/formatters";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
 import type { IndividualListItem } from "@/types/individuals";
@@ -65,7 +66,7 @@ export function UpcomingMovements({ postings, roles, individuals }: Props) {
         status: p.Status as "Planned" | "Candidate",
         startDate: p.StartDate,
         individualId: ind.Id,
-        individualName: ind.Title,
+        individualName: formatName(ind.Rank, ind.Title),
         individualRank: ind.Rank,
         roleId: role.Id,
         roleTitle: role.Title,

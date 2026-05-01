@@ -24,6 +24,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PostingFormDialog } from "@/components/dialogs/PostingFormDialog";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
+import { formatName } from "@/lib/formatters";
 import type { PostingStatus } from "@/types/postings";
 
 const NAVY = "#01219C";
@@ -71,7 +72,10 @@ export function AdminPostingsPage() {
         id: p.Id,
         status: p.Status,
         individualId: p.IndividualId,
-        individualName: p.Individual.Title,
+        individualName: (() => {
+          const ind = (individuals.data ?? []).find((i) => i.Id === p.IndividualId);
+          return formatName(ind?.Rank, ind?.Title ?? p.Individual.Title);
+        })(),
         individualIsExternal:
           (individuals.data ?? []).find((i) => i.Id === p.IndividualId)?.IsExternal ??
           false,

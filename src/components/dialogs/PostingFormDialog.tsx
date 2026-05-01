@@ -20,10 +20,11 @@ import {
 } from "@mui/material";
 import { useCreatePosting, useUpdatePosting } from "@/hooks/useMutations";
 import type { PostingStatus } from "@/types/postings";
+import { formatName } from "@/lib/formatters";
 import type { IndividualListItem } from "@/types/individuals";
 import type { RoleListItem } from "@/types/roles";
 
-type PostingEdit = {
+export type PostingEdit = {
   id: number;
   individualName: string;
   roleTitle: string;
@@ -195,9 +196,7 @@ export function PostingFormDialog({
                     sx={{ mt: 1 }}
                     options={internalIndividuals}
                     getOptionLabel={(o) =>
-                      `${o.Title}${o.Rank ? ` (${o.Rank})` : ""}${
-                        o.IsExternal ? " · external" : ""
-                      }`
+                      `${formatName(o.Rank, o.Title)}${o.IsExternal ? " · external" : ""}`
                     }
                     value={
                       individualId

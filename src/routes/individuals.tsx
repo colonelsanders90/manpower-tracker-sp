@@ -7,6 +7,7 @@ import { usePostings } from "@/hooks/usePostings";
 import { useRoles } from "@/hooks/useRoles";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
+import { formatName } from "@/lib/formatters";
 import type { PostingListItem } from "@/types/postings";
 
 type Row = {
@@ -45,7 +46,7 @@ export function IndividualsPage() {
 
     return individuals.data.map((i) => ({
       id: i.Id,
-      name: i.Title,
+      name: formatName(i.Rank, i.Title),
       isExternal: i.IsExternal,
       current: currentByInd.get(i.Id) ?? null,
       future: futureByInd.get(i.Id) ?? [],

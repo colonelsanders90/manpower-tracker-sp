@@ -112,15 +112,15 @@ const MOCK_ROLES: RoleListItem[] = [
 
 const MOCK_INDIVIDUALS: IndividualListItem[] = (
   [
-    ["Col Tan Wei Ming", "COL", "Software Engineering", "E1001"],
-    ["LTC Siti Aminah",  "LTC", "Software Engineering", "E1002"],
-    ["LTC Raj Kumar",    "LTC", "Cyber",                "E1003"],
-    ["LTC Wong Hui",     "LTC", "Cloud",                "E1004"],
-    ["MAJ Jane Lim",     "MAJ", "Software Engineering", "E1005"],
-    ["MAJ Alex Chua",    "MAJ", "Data",                 "E1006"],
-    ["CPT Daniel Ong",   "CPT", "Cyber",                "E1007"],
-    ["CPT Priya Nair",   "CPT", "Cyber",                "E1008"],
-    ["CPT Marcus Teo",   "CPT", "Software Engineering", "E1009"],
+    ["Tan Wei Ming", "COL", "Software Engineering", "E1001"],
+    ["Siti Aminah",  "LTC", "Software Engineering", "E1002"],
+    ["Raj Kumar",    "LTC", "Cyber",                "E1003"],
+    ["Wong Hui",     "LTC", "Cloud",                "E1004"],
+    ["Jane Lim",     "MAJ", "Software Engineering", "E1005"],
+    ["Alex Chua",    "MAJ", "Data",                 "E1006"],
+    ["Daniel Ong",   "CPT", "Cyber",                "E1007"],
+    ["Priya Nair",   "CPT", "Cyber",                "E1008"],
+    ["Marcus Teo",   "CPT", "Software Engineering", "E1009"],
   ] as [string, string, string, string][]
 ).map(([name, rank, spec, eid], i): IndividualListItem => ({
   Id: i + 1, Title: name,

@@ -140,9 +140,10 @@ describe('buildMovementRows', () => {
     expect(row.Signal).toBe('incoming')
   })
 
-  it('populates Current with the incumbent name and rank', () => {
+  it('populates Current with rank + name combined and raw rank', () => {
     const role = makeRole({ Id: 1, IsVacant: false })
-    const ind = makeIndividual({ Id: 1, Title: 'LTC Rock Tan', Rank: 'LTC' })
+    // Title holds only the name — rank is a separate field (never embed in Title)
+    const ind = makeIndividual({ Id: 1, Title: 'Rock Tan', Rank: 'LTC' })
     const current = makePosting({ Id: 100, RoleId: 1, IndividualId: 1, Status: 'Current' })
     const [row] = buildMovementRows([role], [ind], [current], UNIT_MAP)
     expect(row.Current).not.toBeNull()

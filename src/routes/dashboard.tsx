@@ -110,9 +110,9 @@ export function DashboardPage() {
             mb: 2,
           }}
         >
-          <Stat label="Current postings" value={counts.current} />
-          <Stat label="Planned moves" value={counts.planned} />
-          <Stat label="Candidate pairings" value={counts.candidate} />
+          <Stat label="On Estab" value={counts.current} />
+          <Stat label="Planned Movements" value={counts.planned} />
+          <Stat label="Planned Candidates" value={counts.candidate} />
           <Stat
             label="Vacant roles"
             value={counts.vacant}
@@ -124,6 +124,7 @@ export function DashboardPage() {
             display: "grid",
             gap: 2,
             gridTemplateColumns: { xs: "1fr", md: "minmax(280px, 1fr) 2fr" },
+            alignItems: "start",
           }}
         >
           <FilledRolesDonut filled={filled} total={internalRoles.length} />

@@ -94,6 +94,12 @@ export function categorisePostings(
       end = new Date(p.EndDate);
     } else if (p.Status === "Past") {
       end = today;
+    } else if (p.Status === "Current") {
+      // No end date on a current posting → ongoing with no set tenure.
+      // Extend 10 years beyond today so the bar always runs past the window
+      // right edge, rendering with the » chevron ("perpetual").
+      end = new Date(today);
+      end.setFullYear(end.getFullYear() + 10);
     } else {
       const tenure = roleTenureById.get(p.RoleId) ?? 24;
       end = new Date(start);

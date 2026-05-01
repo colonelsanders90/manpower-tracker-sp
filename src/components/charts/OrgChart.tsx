@@ -12,6 +12,7 @@ import AddIcon from "@mui/icons-material/AddOutlined";
 import { Link } from "@tanstack/react-router";
 import type { UnitNode } from "@/lib/hierarchy";
 import { formatEstablishment } from "@/lib/movement";
+import { formatName } from "@/lib/formatters";
 import type { IndividualListItem } from "@/types/individuals";
 import type { RoleListItem } from "@/types/roles";
 import { UnitFormDialog } from "../dialogs/UnitFormDialog";
@@ -517,12 +518,7 @@ function RoleRow({
             params={{ id: String(incumbent.Id) }}
             style={{ color: "inherit", textDecoration: "none" }}
           >
-            {incumbent.Title}
-            {incumbent.Rank && (
-              <Box component="span" sx={{ color: "text.secondary" }}>
-                {" "}· {incumbent.Rank}
-              </Box>
-            )}
+            {formatName(incumbent.Rank, incumbent.Title)}
           </Link>
         ) : (
           <Typography

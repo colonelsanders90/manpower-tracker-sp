@@ -35,3 +35,37 @@ export function buildUnitTree(
   }
   return roots;
 }
+
+/**
+ * Given the UnitId of a role (or any unit), walk up to its L2 ancestor and
+ * return a single-element array containing just that branch node from the tree.
+ * Falls back to the full tree if the L2 unit cannot be resolved — e.g. when
+ * the role is at L1 or the unit isn't in the tree.
+ *
+ * Used by detail pages to show a focused "org context" sidebar instead of the
+ * full organisation.
+ */
+export function filterToL2Unit(
+  tree: UnitNode[],
+  unitId: number | null | undefined,
+  units: UnitListItem[],
+): UnitNode[] {
+  if (unitId == null) return tree;
+  const unitMap = new Map(units.map((u) => [u.Id, u]));
+
+  // Walk up from unitId until we hit an L2 node
+  let cur = unitMap.get(unitId);
+  while (cur != null && cur.Level !== "L2") {
+    if (cur.ParentUnitId == null) return tree; // hit L1 root — no L2 found
+    cur = unitMap.get(cur.ParentUnitId);
+  }
+  if (cur == null || cur.Level !== "L2") return tree;
+
+  const l2Id = cur.Id;
+  for (const root of tree) {
+    const found = root.children.find((c) => c.Id === l2Id);
+    if (found) return [found];
+    if (root.Id === l2Id) return [root]; // unlikely but safe
+  }
+  return tree;
+}

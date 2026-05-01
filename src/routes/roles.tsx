@@ -355,11 +355,6 @@ function OutCell({ row }: { row: RoleMovementRow }) {
       >
         {c.IndividualName}
       </Link>
-      {c.Rank && (
-        <Box component="span" sx={{ color: "text.secondary" }}>
-          {" "}· {c.Rank}
-        </Box>
-      )}
       {c.EndDate && (
         <Box
           sx={{

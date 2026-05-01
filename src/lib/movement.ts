@@ -4,6 +4,7 @@
 import type { RoleListItem } from "@/types/roles";
 import type { IndividualListItem } from "@/types/individuals";
 import type { PostingListItem } from "@/types/postings";
+import { formatName } from "./formatters";
 
 const ENDING_SOON_DAYS = 365;
 
@@ -86,7 +87,7 @@ export function buildMovementRows(
           Id: p.Id,
           Status: p.Status as "Planned" | "Candidate",
           IndividualId: p.IndividualId,
-          IndividualName: ind?.Title ?? "Unknown",
+          IndividualName: formatName(ind?.Rank, ind?.Title ?? "Unknown"),
           StartDate: p.StartDate,
         };
       })
@@ -143,7 +144,7 @@ export function buildMovementRows(
           ? {
               Id: currentPosting.Id,
               IndividualId: currentIndividual.Id,
-              IndividualName: currentIndividual.Title,
+              IndividualName: formatName(currentIndividual.Rank, currentIndividual.Title),
               Rank: currentIndividual.Rank,
               EndDate: currentPosting.EndDate,
             }

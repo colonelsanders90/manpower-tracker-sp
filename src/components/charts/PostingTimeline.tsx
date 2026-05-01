@@ -13,8 +13,10 @@ import {
   STATUS_BAR_COLOR,
   STATUS_BAR_TEXT,
 } from "@/lib/timeline";
+import { formatName } from "@/lib/formatters";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
+import type { IndividualListItem } from "@/types/individuals";
 
 type Mode = "individual" | "role";
 
@@ -22,10 +24,12 @@ export function PostingTimeline({
   postings,
   mode,
   roles,
+  individuals = [],
 }: {
   postings: PostingListItem[];
   mode: Mode;
   roles: RoleListItem[];
+  individuals?: IndividualListItem[];
 }) {
   if (postings.length === 0) {
     return (
@@ -49,6 +53,7 @@ export function PostingTimeline({
   const tenureById = new Map(
     roles.map((r) => [r.Id, r.StandardTenureMonths]),
   );
+  const indById = new Map(individuals.map((i) => [i.Id, i]));
   const items = categorisePostings(postings, win, today, tenureById);
 
   const earlier = items.filter((i) => i.kind === "earlier");
@@ -64,6 +69,7 @@ export function PostingTimeline({
           label={`Earlier postings (${earlier.length})`}
           items={earlier.map((e) => e.posting)}
           mode={mode}
+          indById={indById}
         />
       )}
 
@@ -164,7 +170,7 @@ export function PostingTimeline({
             const label =
               mode === "individual"
                 ? `${role?.Title ?? "Role"} · ${unitName}`
-                : p.Individual.Title;
+                : formatName(indById.get(p.IndividualId)?.Rank, p.Individual.Title);
             const linkProps =
               mode === "individual"
                 ? { to: "/roles/$id" as const, params: { id: String(p.RoleId) } }
@@ -298,6 +304,7 @@ export function PostingTimeline({
           label={`Later postings (${later.length})`}
           items={later.map((l) => l.posting)}
           mode={mode}
+          indById={indById}
         />
       )}
     </Stack>
@@ -308,10 +315,12 @@ function OutOfWindowList({
   label,
   items,
   mode,
+  indById,
 }: {
   label: string;
   items: PostingListItem[];
   mode: Mode;
+  indById: Map<number, IndividualListItem>;
 }) {
   return (
     <Stack
@@ -336,7 +345,9 @@ function OutOfWindowList({
                 params: { id: String(p.IndividualId) },
               };
         const text =
-          mode === "individual" ? p.Role.Title : p.Individual.Title;
+          mode === "individual"
+            ? p.Role.Title
+            : formatName(indById.get(p.IndividualId)?.Rank, p.Individual.Title);
         return (
           <Stack
             key={p.Id}
