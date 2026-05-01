@@ -5,6 +5,22 @@ export function isJsomAvailable(): boolean {
   try { return typeof SP !== 'undefined' } catch { return false }
 }
 
+// Stronger check — verifies the people-picker namespace is fully initialised,
+// not just that sp.js has executed. clientpeoplepicker.js does async internal
+// setup after the script element fires its load event, so isJsomAvailable()
+// can return true while ClientPeoplePickerWebServiceInterface is still undefined.
+export function isPeoplePickerAvailable(): boolean {
+  try {
+    return (
+      typeof SP !== 'undefined' &&
+      SP?.UI?.ApplicationPages?.ClientPeoplePickerWebServiceInterface != null &&
+      SP?.UI?.ApplicationPages?.ClientPeoplePickerQueryParameters != null
+    )
+  } catch {
+    return false
+  }
+}
+
 // Lazily injects a list of scripts in strict dependency order.
 // Skips any script already present in the DOM. Returns a promise that
 // resolves once all scripts have loaded.

@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { isJsomAvailable, searchUsers, type PrincipalResult } from "@/lib/jsom";
+import { isPeoplePickerAvailable, searchUsers, type PrincipalResult } from "@/lib/jsom";
 import { log } from "@/lib/diagnosticLog";
 
 type Props = {
@@ -24,6 +24,10 @@ type Props = {
 const DEBOUNCE_MS = 300;
 
 export function AdPersonPicker({ onPick }: Props) {
+  // Poll for the people-picker namespace rather than checking once at render.
+  // clientpeoplepicker.js does async internal setup after its script tag fires
+  // its load event, so the namespace may not be ready the instant React mounts.
+  const [ready, setReady] = useState(() => isPeoplePickerAvailable());
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<PrincipalResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,13 +35,26 @@ export function AdPersonPicker({ onPick }: Props) {
   const debounceRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
+    if (ready) return;
+    const interval = setInterval(() => {
+      if (isPeoplePickerAvailable()) setReady(true);
+    }, 200);
+    // Give up after 10 s — show nothing rather than spin forever
+    const timeout = setTimeout(() => clearInterval(interval), 10_000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [ready]);
+
+  useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
 
-  if (!isJsomAvailable()) {
-    // Dev / mock mode — nothing to search
+  if (!ready) {
+    // Dev / mock mode, or picker namespace not yet available
     return null;
   }
 
