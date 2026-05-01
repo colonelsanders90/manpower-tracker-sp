@@ -14,11 +14,11 @@ import type { UnitNode } from "@/lib/hierarchy";
 import { formatEstablishment } from "@/lib/movement";
 import type { IndividualListItem } from "@/types/individuals";
 import type { RoleListItem } from "@/types/roles";
-import { UnitFormDialog } from "./dialogs/UnitFormDialog";
-import { RoleFormDialog } from "./dialogs/RoleFormDialog";
-import { PostingFormDialog } from "./dialogs/PostingFormDialog";
+import { UnitFormDialog } from "../dialogs/UnitFormDialog";
+import { RoleFormDialog } from "../dialogs/RoleFormDialog";
+import { PostingFormDialog } from "../dialogs/PostingFormDialog";
 import { useDeleteUnit, useDeleteRole } from "@/hooks/useMutations";
-import { useConfirm } from "./ConfirmDialog";
+import { useConfirm } from "../shared/ConfirmDialog";
 
 const NAVY = "#01219C";
 const ACCENT = "#008ED0";

@@ -4,8 +4,8 @@ import { useUnits } from "@/hooks/useUnits";
 import { useRoles } from "@/hooks/useRoles";
 import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
-import { FilledRolesDonut } from "@/components/FilledRolesDonut";
-import { UpcomingMovements } from "@/components/UpcomingMovements";
+import { FilledRolesDonut } from "@/components/charts/FilledRolesDonut";
+import { UpcomingMovements } from "@/components/charts/UpcomingMovements";
 import { LoadingBlock, ErrorBlock } from "./_shared";
 
 const NAVY = "#01219C";

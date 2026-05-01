@@ -15,12 +15,156 @@ import type {
 } from "@/types/individuals";
 import type { PostingListItem, PostingListItemWrite } from "@/types/postings";
 import type { SPLookup } from "@/types/base";
-import {
-  MOCK_UNITS,
-  MOCK_ROLES,
-  MOCK_INDIVIDUALS,
-  MOCK_POSTINGS,
-} from "./mockData";
+
+// ─── Seed data ───────────────────────────────────────────────────────────────
+// Static initial data used when localStorage is empty. Kept here (rather than
+// a separate file) because it is only ever consumed by this module.
+
+const _NOW = "2026-04-26T00:00:00Z";
+const _STAFF = { Title: "Mock Author" };
+const _lkp = (id: number, title: string): SPLookup => ({ Id: id, Title: title });
+
+const MOCK_UNITS: UnitListItem[] = [
+  // L1
+  {
+    Id: 1, Title: "RAiD", Code: "RAID", Level: "L1",
+    ParentUnit: null, ParentUnitId: null,
+    Description: null, IsActive: true,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  },
+  // L2 branches
+  ...[
+    "P4B", "Corporate Svcs", "SWiFT", "CyDef",
+    "RSAF Data Office", "Mission Data", "A3", "Cloud", "IKC2",
+    "PPCOE", "Aether",
+  ].map((name, i): UnitListItem => ({
+    Id: 2 + i, Title: name, Code: null, Level: "L2",
+    ParentUnit: _lkp(1, "RAiD"), ParentUnitId: 1,
+    Description: null, IsActive: true,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  })),
+];
+
+const _branchUnits = MOCK_UNITS.filter((u) => u.Level === "L2");
+let _nextRoleId = 1;
+
+const _branchHeadTitles: Record<string, string> = {
+  "P4B": "Hd P4B / Dy Hd RAiD",
+  "Corporate Svcs": "Hd Corporate Svcs Br",
+  "SWiFT": "Hd SWiFT",
+  "CyDef": "Hd CyDef",
+  "RSAF Data Office": "Hd RSAF Data Office",
+  "Mission Data": "Hd Mission Data",
+  "A3": "Hd A3",
+  "Cloud": "Hd Cloud",
+  "IKC2": "Hd IKC2",
+  "PPCOE": "Hd PPCOE",
+  "Aether": "Hd Aether",
+};
+
+// Hd RAiD (L1 head)
+const HD_RAID_ID = _nextRoleId++;
+const _headRoles: RoleListItem[] = [
+  {
+    Id: HD_RAID_ID, Title: "Hd RAiD",
+    Unit: _lkp(1, "RAiD"), UnitId: 1, Level: "L1",
+    IsHead: true, IsExternal: false, ExternalUnit: null,
+    EstablishmentRank: null, EstablishmentVocation: null,
+    StandardTenureMonths: 36, IsVacant: false,
+    Specialisation: null, IsActive: true,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  },
+];
+const _branchHeadIds: Record<string, number> = {};
+for (const u of _branchUnits) {
+  const id = _nextRoleId++;
+  _branchHeadIds[u.Title] = id;
+  _headRoles.push({
+    Id: id, Title: _branchHeadTitles[u.Title] ?? `Hd ${u.Title}`,
+    Unit: _lkp(u.Id, u.Title), UnitId: u.Id, Level: "L2",
+    IsHead: true, IsExternal: false, ExternalUnit: null,
+    EstablishmentRank: null, EstablishmentVocation: null,
+    StandardTenureMonths: 30, IsVacant: false,
+    Specialisation: null, IsActive: true,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  });
+}
+
+const _cyDef = _branchUnits.find((u) => u.Title === "CyDef")!;
+const _cloud = _branchUnits.find((u) => u.Title === "Cloud")!;
+const _swift = _branchUnits.find((u) => u.Title === "SWiFT")!;
+const _mission = _branchUnits.find((u) => u.Title === "Mission Data")!;
+
+const CYBER_ENG_ID = _nextRoleId++;
+const CYBER_ANA_ID = _nextRoleId++;
+const CLOUD_ENG_ID = _nextRoleId++;
+const SW_ENG_ID = _nextRoleId++;
+const DATA_ANA_ID = _nextRoleId++;
+
+const MOCK_ROLES: RoleListItem[] = [
+  ..._headRoles,
+  { Id: CYBER_ENG_ID, Title: "Cyber Engineer", Unit: _lkp(_cyDef.Id, _cyDef.Title), UnitId: _cyDef.Id, Level: "L3", IsHead: false, IsExternal: false, ExternalUnit: null, EstablishmentRank: null, EstablishmentVocation: null, StandardTenureMonths: 24, IsVacant: false, Specialisation: "Cyber", IsActive: true, Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF },
+  { Id: CYBER_ANA_ID, Title: "Cyber Analyst", Unit: _lkp(_cyDef.Id, _cyDef.Title), UnitId: _cyDef.Id, Level: "L3", IsHead: false, IsExternal: false, ExternalUnit: null, EstablishmentRank: null, EstablishmentVocation: null, StandardTenureMonths: 24, IsVacant: true, Specialisation: "Cyber", IsActive: true, Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF },
+  { Id: CLOUD_ENG_ID, Title: "Cloud Engineer", Unit: _lkp(_cloud.Id, _cloud.Title), UnitId: _cloud.Id, Level: "L3", IsHead: false, IsExternal: false, ExternalUnit: null, EstablishmentRank: null, EstablishmentVocation: null, StandardTenureMonths: 24, IsVacant: false, Specialisation: "Cloud", IsActive: true, Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF },
+  { Id: SW_ENG_ID, Title: "Software Engineer", Unit: _lkp(_swift.Id, _swift.Title), UnitId: _swift.Id, Level: "L3", IsHead: false, IsExternal: false, ExternalUnit: null, EstablishmentRank: null, EstablishmentVocation: null, StandardTenureMonths: 24, IsVacant: false, Specialisation: "Software Engineering", IsActive: true, Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF },
+  { Id: DATA_ANA_ID, Title: "Data Analyst", Unit: _lkp(_mission.Id, _mission.Title), UnitId: _mission.Id, Level: "L3", IsHead: false, IsExternal: false, ExternalUnit: null, EstablishmentRank: null, EstablishmentVocation: null, StandardTenureMonths: 24, IsVacant: false, Specialisation: "Data", IsActive: true, Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF },
+];
+
+const MOCK_INDIVIDUALS: IndividualListItem[] = (
+  [
+    ["Col Tan Wei Ming", "COL", "Software Engineering", "E1001"],
+    ["LTC Siti Aminah",  "LTC", "Software Engineering", "E1002"],
+    ["LTC Raj Kumar",    "LTC", "Cyber",                "E1003"],
+    ["LTC Wong Hui",     "LTC", "Cloud",                "E1004"],
+    ["MAJ Jane Lim",     "MAJ", "Software Engineering", "E1005"],
+    ["MAJ Alex Chua",    "MAJ", "Data",                 "E1006"],
+    ["CPT Daniel Ong",   "CPT", "Cyber",                "E1007"],
+    ["CPT Priya Nair",   "CPT", "Cyber",                "E1008"],
+    ["CPT Marcus Teo",   "CPT", "Software Engineering", "E1009"],
+  ] as [string, string, string, string][]
+).map(([name, rank, spec, eid], i): IndividualListItem => ({
+  Id: i + 1, Title: name,
+  Rank: rank, Specialisation: spec, EmployeeId: eid,
+  Email: null, IsExternal: false, IsActive: true,
+  Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+}));
+
+const _ind = (id: number) => MOCK_INDIVIDUALS.find((p) => p.Id === id)!;
+const _role = (id: number) => MOCK_ROLES.find((r) => r.Id === id)!;
+
+const [TAN, SITI, RAJ, WONG, JANE, ALEX, DANIEL, PRIYA, MARCUS] =
+  MOCK_INDIVIDUALS.map((i) => i.Id);
+
+const MOCK_POSTINGS: PostingListItem[] = (
+  [
+    { i: TAN,    r: HD_RAID_ID,                         Status: "Current",   StartDate: "2024-01-01", EndDate: "2026-12-31", Notes: null },
+    { i: SITI,   r: _branchHeadIds["P4B"],              Status: "Current",   StartDate: "2024-01-01", EndDate: "2026-06-30", Notes: null },
+    { i: SITI,   r: HD_RAID_ID,                         Status: "Candidate", StartDate: "2026-07-01", EndDate: "2029-06-30", Notes: "Strong succession candidate; pending COL promotion. Q3 2026 take-over." },
+    { i: RAJ,    r: _branchHeadIds["CyDef"],            Status: "Current",   StartDate: "2023-06-01", EndDate: "2026-05-31", Notes: null },
+    { i: DANIEL, r: CYBER_ENG_ID,                       Status: "Current",   StartDate: "2024-01-01", EndDate: "2026-12-31", Notes: null },
+    { i: PRIYA,  r: CYBER_ANA_ID,                       Status: "Candidate", StartDate: "2026-07-01", EndDate: "2028-06-30", Notes: "Natural rotation. Q3 2026 take-over." },
+    { i: PRIYA,  r: CYBER_ENG_ID,                       Status: "Past",      StartDate: "2022-01-01", EndDate: "2023-12-31", Notes: "First tour." },
+    { i: WONG,   r: _branchHeadIds["Cloud"],            Status: "Current",   StartDate: "2024-01-01", EndDate: "2026-12-31", Notes: null },
+    { i: MARCUS, r: CLOUD_ENG_ID,                       Status: "Candidate", StartDate: "2027-01-01", EndDate: "2028-12-31", Notes: "Cross-branch move from SWiFT being considered." },
+    { i: JANE,   r: SW_ENG_ID,                          Status: "Current",   StartDate: "2024-01-01", EndDate: "2026-06-30", Notes: null },
+    { i: JANE,   r: _branchHeadIds["SWiFT"],            Status: "Planned",   StartDate: "2026-07-01", EndDate: "2028-12-31", Notes: "Approved succession." },
+    { i: MARCUS, r: SW_ENG_ID,                          Status: "Past",      StartDate: "2022-01-01", EndDate: "2023-12-31", Notes: null },
+    { i: ALEX,   r: DATA_ANA_ID,                        Status: "Current",   StartDate: "2024-06-01", EndDate: "2026-12-31", Notes: null },
+    { i: ALEX,   r: _branchHeadIds["Mission Data"],     Status: "Candidate", StartDate: "2027-01-01", EndDate: "2029-12-31", Notes: "Earmarked for next cycle." },
+  ] as Array<{ i: number; r: number; Status: PostingListItem["Status"]; StartDate: string | null; EndDate: string | null; Notes: string | null }>
+).map((p, idx): PostingListItem => {
+  const ind = _ind(p.i);
+  const role = _role(p.r);
+  return {
+    Id: idx + 1,
+    Title: `${ind.Title} → ${role.Title}`,
+    Individual: _lkp(ind.Id, ind.Title), IndividualId: ind.Id,
+    Role: _lkp(role.Id, role.Title),     RoleId: role.Id,
+    Status: p.Status, StartDate: p.StartDate, EndDate: p.EndDate, Notes: p.Notes,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  };
+});
+
 
 // ─── localStorage persistence helpers ───────────────────────────────────────
 

@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
 import { useRoles } from "@/hooks/useRoles";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import type { PostingListItem } from "@/types/postings";
 

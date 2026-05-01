@@ -5,7 +5,7 @@
 
 import { Box, Stack, Typography, Tooltip } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge } from "../shared/StatusBadge";
 import {
   computeWindow,
   pctBetween,

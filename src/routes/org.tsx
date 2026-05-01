@@ -5,7 +5,7 @@ import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { buildUnitTree } from "@/lib/hierarchy";
-import { OrgChart } from "@/components/OrgChart";
+import { OrgChart } from "@/components/charts/OrgChart";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import { Link } from "@tanstack/react-router";
 

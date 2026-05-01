@@ -20,9 +20,9 @@ import { useRoles } from "@/hooks/useRoles";
 import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
 import { useDeletePosting } from "@/hooks/useMutations";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PostingFormDialog } from "@/components/dialogs/PostingFormDialog";
-import { useConfirm } from "@/components/ConfirmDialog";
+import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import type { PostingStatus } from "@/types/postings";
 

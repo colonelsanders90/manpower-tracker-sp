@@ -6,7 +6,7 @@
 
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge } from "../shared/StatusBadge";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
 import type { IndividualListItem } from "@/types/individuals";

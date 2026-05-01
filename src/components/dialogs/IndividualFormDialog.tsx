@@ -17,7 +17,7 @@ import {
   useCreateIndividual,
   useUpdateIndividual,
 } from "@/hooks/useMutations";
-import { AdPersonPicker } from "@/components/AdPersonPicker";
+import { AdPersonPicker } from "@/components/shared/AdPersonPicker";
 
 type IndividualEdit = {
   id: number;

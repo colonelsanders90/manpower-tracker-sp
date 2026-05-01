@@ -12,7 +12,7 @@ import {
   SIGNAL_RANK,
   type RoleMovementRow,
 } from "@/lib/movement";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 
 const NAVY = "#01219C";

@@ -18,7 +18,7 @@ import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
 import { useDeleteIndividual } from "@/hooks/useMutations";
 import { IndividualFormDialog } from "@/components/dialogs/IndividualFormDialog";
-import { useConfirm } from "@/components/ConfirmDialog";
+import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 
 const NAVY = "#01219C";

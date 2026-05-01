@@ -5,9 +5,9 @@ import { usePostings } from "@/hooks/usePostings";
 import { useRoles } from "@/hooks/useRoles";
 import { useUnits } from "@/hooks/useUnits";
 import { buildUnitTree } from "@/lib/hierarchy";
-import { OrgChart } from "@/components/OrgChart";
-import { PostingTimeline } from "@/components/PostingTimeline";
-import { StatusBadge } from "@/components/StatusBadge";
+import { OrgChart } from "@/components/charts/OrgChart";
+import { PostingTimeline } from "@/components/charts/PostingTimeline";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 
 export function IndividualDetailPage() {
