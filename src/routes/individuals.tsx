@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { Stack, Box, Typography } from "@mui/material";
+import { Stack, Box, Typography, Chip } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
 import { useRoles } from "@/hooks/useRoles";
@@ -9,6 +9,16 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import { formatName } from "@/lib/formatters";
 import type { PostingListItem } from "@/types/postings";
+
+const NAVY = "#01219C";
+
+type FilterKey = "planned" | "candidate" | "all";
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: "planned", label: "Planned" },
+  { key: "candidate", label: "Proposed" },
+  { key: "all", label: "All" },
+];
 
 type Row = {
   id: number;
@@ -19,11 +29,16 @@ type Row = {
 };
 
 export function IndividualsPage() {
+  // Read the filter from the URL — defaults to "planned" when not set.
+  const search = useSearch({ from: "/individuals" });
+  const activeFilter: FilterKey = search.filter ?? "planned";
+  const navigate = useNavigate({ from: "/individuals" });
+
   const individuals = useIndividuals();
   const postings = usePostings();
   const roles = useRoles();
 
-  const rows = useMemo((): Row[] => {
+  const allRows = useMemo((): Row[] => {
     if (!individuals.data || !postings.data || !roles.data) return [];
     const roleById = new Map(roles.data.map((r) => [r.Id, r]));
 
@@ -53,10 +68,27 @@ export function IndividualsPage() {
     }));
   }, [individuals.data, postings.data, roles.data]);
 
+  const rows = useMemo(() => {
+    switch (activeFilter) {
+      case "planned":
+        return allRows.filter((r) => r.future.some((p) => p.Status === "Planned"));
+      case "candidate":
+        return allRows.filter((r) => r.future.some((p) => p.Status === "Candidate"));
+      case "all":
+        return allRows;
+    }
+  }, [allRows, activeFilter]);
+
   if (individuals.isLoading || postings.isLoading || roles.isLoading)
     return <LoadingBlock label="Loading individuals…" />;
   if (individuals.error || postings.error || roles.error)
     return <ErrorBlock error={(individuals.error || postings.error || roles.error) as Error} />;
+
+  const counts: Record<FilterKey, number> = {
+    planned: allRows.filter((r) => r.future.some((p) => p.Status === "Planned")).length,
+    candidate: allRows.filter((r) => r.future.some((p) => p.Status === "Candidate")).length,
+    all: allRows.length,
+  };
 
   const cols: GridColDef<Row>[] = [
     {
@@ -70,7 +102,7 @@ export function IndividualsPage() {
             to="/individuals/$id"
             params={{ id: String(params.row.id) }}
             style={{
-              color: "#01219C",
+              color: NAVY,
               fontWeight: 500,
               textDecoration: "none",
             }}
@@ -127,7 +159,7 @@ export function IndividualsPage() {
     },
     {
       field: "future",
-      headerName: "Possible next roles",
+      headerName: "Upcoming postings",
       flex: 2,
       minWidth: 300,
       sortable: false,
@@ -175,13 +207,45 @@ export function IndividualsPage() {
     },
   ];
 
+  const filterLabel =
+    activeFilter === "planned"
+      ? "people with confirmed upcoming moves"
+      : activeFilter === "candidate"
+        ? "people proposed for a move"
+        : `all ${counts.all} people`;
+
   return (
     <Stack spacing={3}>
       <PageHeader
         overline="Manpower · Individuals"
         title="Individuals"
-        blurb={`${rows.length} people. Click a column header to sort. Click a name to see the movement timeline and where they might go next.`}
+        blurb={`Showing ${rows.length} ${filterLabel}. Click a name to see the full posting history.`}
       />
+
+      {/* Filter toggles */}
+      <Stack direction="row" spacing={1} flexWrap="wrap">
+        {FILTERS.map((f) => (
+          <Chip
+            key={f.key}
+            label={`${f.label} (${counts[f.key]})`}
+            onClick={() =>
+              navigate({ search: f.key === "planned" ? {} : { filter: f.key } })
+            }
+            variant={activeFilter === f.key ? "filled" : "outlined"}
+            sx={{
+              fontFamily: '"Geist Mono", monospace',
+              fontSize: 11,
+              letterSpacing: "0.04em",
+              ...(activeFilter === f.key && {
+                bgcolor: NAVY,
+                color: "white",
+                "&:hover": { bgcolor: NAVY },
+              }),
+            }}
+          />
+        ))}
+      </Stack>
+
       <Box sx={{ height: 600 }}>
         <DataGrid
           rows={rows}
@@ -196,7 +260,7 @@ export function IndividualsPage() {
             bgcolor: "background.paper",
             borderColor: "rgba(0,0,0,0.08)",
             "& .MuiDataGrid-columnHeaders": {
-              bgcolor: "#01219C",
+              bgcolor: NAVY,
               color: "white",
               borderRadius: 0,
               fontFamily: '"Geist Mono", monospace',

@@ -111,8 +111,16 @@ export function DashboardPage() {
           }}
         >
           <Stat label="On Estab" value={counts.current} />
-          <Stat label="Planned Movements" value={counts.planned} />
-          <Stat label="Planned Candidates" value={counts.candidate} />
+          <Stat
+            label="Planned Movements"
+            value={counts.planned}
+            filter="planned"
+          />
+          <Stat
+            label="Proposed Postings"
+            value={counts.candidate}
+            filter="candidate"
+          />
           <Stat
             label="Vacant roles"
             value={counts.vacant}
@@ -191,13 +199,16 @@ function Stat({
   label,
   value,
   accent,
+  filter,
 }: {
   label: string;
   value: number;
   accent?: boolean;
+  /** When set, the card becomes a link to /individuals with this filter pre-selected. */
+  filter?: "planned" | "candidate";
 }) {
-  return (
-    <Paper sx={{ px: 2, py: 1.5 }}>
+  const content = (
+    <>
       <Typography variant="caption">{label}</Typography>
       <Box
         sx={{
@@ -211,6 +222,43 @@ function Stat({
       >
         {value}
       </Box>
-    </Paper>
+      {filter && (
+        <Box
+          sx={{
+            mt: 0.75,
+            fontFamily: '"Geist Mono", monospace',
+            fontSize: 10,
+            color: "primary.main",
+            letterSpacing: "0.04em",
+          }}
+        >
+          view list →
+        </Box>
+      )}
+    </>
   );
+
+  if (filter) {
+    return (
+      <Paper
+        sx={{
+          px: 2,
+          py: 1.5,
+          transition: "all 150ms",
+          cursor: "pointer",
+          "&:hover": { transform: "translateY(-1px)" },
+        }}
+      >
+        <Link
+          to="/individuals"
+          search={{ filter }}
+          style={{ display: "block", textDecoration: "none", color: "inherit" }}
+        >
+          {content}
+        </Link>
+      </Paper>
+    );
+  }
+
+  return <Paper sx={{ px: 2, py: 1.5 }}>{content}</Paper>;
 }

@@ -29,9 +29,16 @@ const orgRoute = createRoute({
   component: OrgPage,
 });
 
+// Filter param lets dashboard stat cards deep-link to a pre-selected filter.
+// "planned" | "candidate" | "all" — anything else is silently dropped.
 const individualsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/individuals",
+  validateSearch: (search: Record<string, unknown>): { filter?: "planned" | "candidate" | "all" } => {
+    const f = search.filter;
+    if (f === "planned" || f === "candidate" || f === "all") return { filter: f };
+    return {};
+  },
   component: IndividualsPage,
 });
 

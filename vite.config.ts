@@ -11,9 +11,9 @@ import { execSync } from 'node:child_process'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Inject a build version so the AppBar badge auto-updates on every push.
-// Format: "vX.Y.Z" where X.Y comes from package.json and Z is the git commit
-// count (auto-increments on every commit).  Falls back to "vX.Y.0" when git
-// is unavailable, and to "v0.0.0-dev" on the dev server.
+// Format: "vX.Y.Z (abcdef0)" — semver from package.json + commit count + short
+// hash so you can always match what's in prod back to an exact git commit.
+// Falls back gracefully when git is unavailable.
 function buildVersion(): string {
   // Read major.minor from package.json — bump manually for features/releases.
   let base = 'v0.0'
@@ -25,13 +25,20 @@ function buildVersion(): string {
     base = `v${parts[0]}.${parts[1]}`
   } catch { /* keep default */ }
 
-  // Patch = total commit count — auto-increments on every push.
+  // Patch = total commit count — auto-increments on every commit.
+  let patch = '0'
   try {
-    const count = execSync('git rev-list --count HEAD').toString().trim()
-    return `${base}.${count}`
-  } catch {
-    return `${base}.0`
-  }
+    patch = execSync('git rev-list --count HEAD').toString().trim()
+  } catch { /* keep default */ }
+
+  // Short hash — lets you `git checkout <hash>` straight from the badge.
+  let hash = ''
+  try {
+    hash = execSync('git rev-parse --short HEAD').toString().trim()
+  } catch { /* omit if unavailable */ }
+
+  const ver = `${base}.${patch}`
+  return hash ? `${ver} (${hash})` : ver
 }
 
 export default defineConfig({
