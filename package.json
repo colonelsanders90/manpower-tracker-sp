@@ -11,7 +11,8 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "ship": "bash scripts/ship.sh"
   },
   "dependencies": {
     "@emotion/react": "^11.13.5",
