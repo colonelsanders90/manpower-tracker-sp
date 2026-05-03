@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RAiD HR Tracker</title>
 
-  <!--
-    SP JSOM — loaded from SharePoint at runtime, not bundled by Vite.
-    Load order is strict — do not reorder or skip.
+  <!-- ── Early-error box ─────────────────────────────────────────────────── -->
+  <style>
+    #early-error {
+      display: none; font-family: monospace; font-size: 13px;
+      padding: 24px; margin: 24px; background: #fff; color: #c00;
+      white-space: pre-wrap; border: 2px solid #c00; border-radius: 6px;
+    }
+  </style>
 
-    MicrosoftAjax.js patches Array/Object prototypes, but this has been
-    confirmed safe in this environment because the static tags execute
-    synchronously before the React bundle parses (React's own prototype
-    state is not yet established). Lazy-loading these AFTER React boots
-    would be too late for clientpeoplepicker.js to initialise correctly.
-
-    All 8 scripts are required for searchUsers() (AD people picker).
-  -->
+  <!-- ── SP JSOM (people picker) ─────────────────────────────────────────────
+       Synchronous, strict load order — do not reorder or remove any entry.
+       All 8 are required for searchUsers() / clientpeoplepicker.js.
+       See workspace CLAUDE.md → "Script load" for the full dependency chain. -->
   <script src="/_layouts/15/MicrosoftAjax.js"></script>
   <script src="/_layouts/15/sp.runtime.js"></script>
   <script src="/_layouts/15/sp.js"></script>
@@ -27,22 +28,30 @@
   <script src="/_layouts/15/clientpeoplepicker.js"></script>
 </head>
 <body>
-  <!-- Early error display — runs before React, visible without DevTools.
-       Shows any crash as plain text on screen instead of a blank page. -->
-  <div id="early-error" style="display:none;font-family:monospace;padding:24px;background:#fff;color:#c00;white-space:pre-wrap;font-size:13px;border:2px solid #c00;margin:24px;border-radius:6px"></div>
+
+  <!-- Pre-React crash display — visible without DevTools on the intranet. -->
+  <div id="early-error"></div>
   <script>
-    window.onerror = function(msg, src, line, col, err) {
-      var box = document.getElementById('early-error');
-      box.style.display = 'block';
-      box.textContent = 'ERROR: ' + msg + '\nSource: ' + src + '\nLine: ' + line + ':' + col + (err && err.stack ? '\n\n' + err.stack : '');
-    };
-    window.addEventListener('unhandledrejection', function(e) {
-      var box = document.getElementById('early-error');
-      box.style.display = 'block';
-      box.textContent = (box.textContent || '') + '\nUNHANDLED PROMISE: ' + (e.reason && e.reason.stack ? e.reason.stack : String(e.reason));
-    });
+    (function () {
+      function show(msg) {
+        var box = document.getElementById('early-error');
+        box.style.display = 'block';
+        box.textContent = (box.textContent ? box.textContent + '\n' : '') + msg;
+      }
+      window.onerror = function (msg, src, line, col, err) {
+        show('ERROR: ' + msg +
+             '\nSource: ' + src + '\nLine: ' + line + ':' + col +
+             (err && err.stack ? '\n\n' + err.stack : ''));
+      };
+      window.addEventListener('unhandledrejection', function (e) {
+        show('UNHANDLED PROMISE: ' +
+             (e.reason && e.reason.stack ? e.reason.stack : String(e.reason)));
+      });
+    }());
   </script>
+
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
+
 </body>
 </html>
