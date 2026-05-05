@@ -65,6 +65,7 @@ function makeIndividual(
     Email: null,
     IsExternal: false,
     IsActive: true,
+    Profile: null,
     ...overrides,
   }
 }

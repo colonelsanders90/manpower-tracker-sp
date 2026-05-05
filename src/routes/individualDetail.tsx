@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Button,
+  Chip,
   IconButton,
   Paper,
   Stack,
@@ -16,6 +17,9 @@ import { useIndividuals } from "@/hooks/useIndividuals";
 import { usePostings } from "@/hooks/usePostings";
 import { useRoles } from "@/hooks/useRoles";
 import { useUnits } from "@/hooks/useUnits";
+import { useRoaCourses } from "@/hooks/useRoaCourses";
+import { useCourseAttendance } from "@/hooks/useCourseAttendance";
+import { useProgression } from "@/hooks/useProgression";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useDeletePosting } from "@/hooks/useMutations";
 import { buildUnitTree, filterToL2Unit } from "@/lib/hierarchy";
@@ -26,9 +30,18 @@ import {
   PostingFormDialog,
   type PostingEdit,
 } from "@/components/dialogs/PostingFormDialog";
+import { ProgressionFormDialog } from "@/components/dialogs/ProgressionFormDialog";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import { formatName } from "@/lib/formatters";
+import {
+  STATUS_FILL,
+  STATUS_TEXT,
+  STATUS_LABEL,
+  getRequiredCourses,
+  type RoaStatus,
+} from "@/lib/progression";
+import { MONO } from "@/lib/tokens";
 
 export function IndividualDetailPage() {
   const { id } = useParams({ from: "/individuals/$id" });
@@ -38,12 +51,16 @@ export function IndividualDetailPage() {
   const postings = usePostings();
   const roles = useRoles();
   const units = useUnits();
+  const roaCourses = useRoaCourses();
+  const attendance = useCourseAttendance();
+  const progression = useProgression();
   const currentUser = useCurrentUser();
   const deletePosting = useDeletePosting();
   const { ask, ConfirmHost } = useConfirm();
 
   const [editingPosting, setEditingPosting] = useState<PostingEdit | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [progOpen, setProgOpen] = useState(false);
 
   if (
     individuals.isLoading ||
@@ -499,6 +516,16 @@ export function IndividualDetailPage() {
         </Paper>
       </Box>
 
+      {/* ── Development snapshot (baseball card) ───────────────────────── */}
+      <DevelopmentSnapshot
+        ind={ind}
+        myAttendance={(attendance.data ?? []).filter((a) => a.IndividualId === individualId)}
+        myProgression={(progression.data ?? []).find((p) => p.IndividualId === individualId)}
+        allCourses={roaCourses.data ?? []}
+        isAdmin={isAdmin}
+        onEdit={() => setProgOpen(true)}
+      />
+
       {/* Dialogs */}
       {isAdmin && (
         <PostingFormDialog
@@ -517,7 +544,225 @@ export function IndividualDetailPage() {
           roles={allRoles}
         />
       )}
+      {isAdmin && (
+        <ProgressionFormDialog
+          open={progOpen}
+          onClose={() => setProgOpen(false)}
+          edit={{
+            individualId,
+            individualName: formatName(ind.Rank, ind.Title),
+            profile: ind.Profile,
+            mascLevel:
+              progression.data?.find((p) => p.IndividualId === individualId)?.MASCLevel ?? null,
+            dateOfExpertise:
+              progression.data?.find((p) => p.IndividualId === individualId)?.DateOfExpertise ?? null,
+            emfRemarks:
+              progression.data?.find((p) => p.IndividualId === individualId)?.EMFRemarks ?? null,
+            track: progression.data?.find((p) => p.IndividualId === individualId)?.Track ?? null,
+            rLevel: progression.data?.find((p) => p.IndividualId === individualId)?.RLevel ?? null,
+            rLevelRemarks:
+              progression.data?.find((p) => p.IndividualId === individualId)?.RLevelRemarks ?? null,
+            coursesRemarks:
+              progression.data?.find((p) => p.IndividualId === individualId)?.CoursesRemarks ?? null,
+            attendance: (attendance.data ?? []).filter((a) => a.IndividualId === individualId),
+          }}
+          allCourses={roaCourses.data ?? []}
+        />
+      )}
       {ConfirmHost}
     </Stack>
+  );
+}
+
+// ── Baseball-card panel ─────────────────────────────────────────────────────
+// Compact view of one person's development state. Lives below the existing
+// posting timeline / org context section. Editable via the same
+// ProgressionFormDialog the Development tab uses.
+
+function DevelopmentSnapshot({
+  ind,
+  myAttendance,
+  myProgression,
+  allCourses,
+  isAdmin,
+  onEdit,
+}: {
+  ind: { Rank: string | null; Title: string; Profile: import("@/lib/progression").Profile | null };
+  myAttendance: import("@/types/courseAttendance").CourseAttendanceListItem[];
+  myProgression: import("@/types/progression").ProgressionListItem | undefined;
+  allCourses: import("@/types/roaCourses").RoaCourseListItem[];
+  isAdmin: boolean;
+  onEdit: () => void;
+}) {
+  const required = useMemo(
+    () => getRequiredCourses(ind.Profile, allCourses),
+    [ind.Profile, allCourses],
+  );
+  const attByCourse = useMemo(
+    () => new Map(myAttendance.map((a) => [a.CourseId, a])),
+    [myAttendance],
+  );
+
+  return (
+    <Paper sx={{ p: 2.5 }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mb: 2 }}
+      >
+        <Stack direction="row" alignItems="center" gap={1.5}>
+          <Typography variant="caption">Development snapshot</Typography>
+          {ind.Profile ? (
+            <Chip
+              label={ind.Profile}
+              size="small"
+              sx={{ fontFamily: MONO, fontSize: 10, height: 22 }}
+            />
+          ) : (
+            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+              No profile assigned
+            </Typography>
+          )}
+        </Stack>
+        {isAdmin && (
+          <Tooltip title="Edit progression">
+            <IconButton size="small" onClick={onEdit}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Stack>
+
+      {ind.Profile == null && !isAdmin && (
+        <Typography variant="body2" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+          No development profile recorded for this individual.
+        </Typography>
+      )}
+
+      {ind.Profile != null && (
+        <Stack spacing={2}>
+          {/* Top row: MASC / Track / R-Level */}
+          <Stack direction="row" gap={3} flexWrap="wrap">
+            {myProgression?.MASCLevel != null && (
+              <Box>
+                <Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+                  MASC Level
+                </Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2 }}>
+                  {myProgression.MASCLevel}
+                </Typography>
+                {myProgression.DateOfExpertise && (
+                  <Typography
+                    sx={{ fontFamily: MONO, fontSize: 10, color: "text.secondary" }}
+                  >
+                    {myProgression.DateOfExpertise}
+                  </Typography>
+                )}
+              </Box>
+            )}
+            {myProgression?.Track && (
+              <Box>
+                <Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+                  Track
+                </Typography>
+                <Typography sx={{ fontSize: 14 }}>{myProgression.Track}</Typography>
+              </Box>
+            )}
+            {myProgression?.RLevel && (
+              <Box>
+                <Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+                  R-Level
+                </Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2 }}>
+                  {myProgression.RLevel}
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+
+          {/* ROA strip */}
+          {required.length > 0 && (
+            <Box>
+              <Typography variant="caption" sx={{ display: "block", mb: 1, color: "text.secondary" }}>
+                ROA courses
+              </Typography>
+              <Stack direction="row" gap={1} flexWrap="wrap">
+                {required.map((c) => {
+                  const att = attByCourse.get(c.Id);
+                  const status: RoaStatus = att?.Status ?? "NotPlanned";
+                  return (
+                    <Tooltip
+                      key={c.Id}
+                      title={`${c.Label}${att?.Date ? ` · ${att.Date}` : ""}`}
+                    >
+                      <Box
+                        sx={{
+                          bgcolor: STATUS_FILL[status],
+                          color: STATUS_TEXT[status],
+                          fontFamily: MONO,
+                          fontSize: 10,
+                          fontWeight: 600,
+                          borderRadius: 0.5,
+                          px: 1,
+                          py: 0.5,
+                          minWidth: 70,
+                          textAlign: "center",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        <Box>{c.Title}</Box>
+                        <Box sx={{ fontSize: 9, opacity: 0.85 }}>
+                          {att?.Date ?? STATUS_LABEL[status]}
+                        </Box>
+                      </Box>
+                    </Tooltip>
+                  );
+                })}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Remarks (if any) */}
+          {(myProgression?.EMFRemarks ||
+            myProgression?.RLevelRemarks ||
+            myProgression?.CoursesRemarks) && (
+            <Stack spacing={0.75}>
+              {myProgression.EMFRemarks && (
+                <RemarkLine label="EMF" text={myProgression.EMFRemarks} />
+              )}
+              {myProgression.RLevelRemarks && (
+                <RemarkLine label="R-Level" text={myProgression.RLevelRemarks} />
+              )}
+              {myProgression.CoursesRemarks && (
+                <RemarkLine label="Courses" text={myProgression.CoursesRemarks} />
+              )}
+            </Stack>
+          )}
+        </Stack>
+      )}
+    </Paper>
+  );
+}
+
+function RemarkLine({ label, text }: { label: string; text: string }) {
+  return (
+    <Box sx={{ fontSize: 12.5, color: "text.secondary", fontStyle: "italic" }}>
+      <Box
+        component="span"
+        sx={{
+          fontFamily: MONO,
+          fontStyle: "normal",
+          fontSize: 9.5,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          mr: 1,
+          color: "text.disabled",
+        }}
+      >
+        {label}
+      </Box>
+      {text}
+    </Box>
   );
 }

@@ -31,6 +31,7 @@ type Row = {
   employeeId: string | null;
   email: string | null;
   isExternal: boolean;
+  profile: import("@/lib/progression").Profile | null;
   postingCount: number;
 };
 
@@ -58,6 +59,7 @@ export function AdminPeoplePage() {
       employeeId: i.EmployeeId,
       email: i.Email,
       isExternal: i.IsExternal,
+      profile: i.Profile,
       postingCount: counts.get(i.Id) ?? 0,
     }));
   }, [individuals.data, postings.data]);

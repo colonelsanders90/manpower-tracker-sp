@@ -8,6 +8,7 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "../shared/StatusBadge";
 import { formatName } from "@/lib/formatters";
+import { NAVY } from "@/lib/tokens";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
 import type { IndividualListItem } from "@/types/individuals";
@@ -153,7 +154,7 @@ function UpcomingRow({ row }: { row: Row }) {
         <Link
           to="/individuals/$id"
           params={{ id: String(row.individualId) }}
-          style={{ color: "#01219C", textDecoration: "none", fontWeight: 500 }}
+          style={{ color: NAVY, textDecoration: "none", fontWeight: 500 }}
         >
           {row.individualName}
         </Link>{" "}

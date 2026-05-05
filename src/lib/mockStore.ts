@@ -14,6 +14,18 @@ import type {
   IndividualListItemWrite,
 } from "@/types/individuals";
 import type { PostingListItem, PostingListItemWrite } from "@/types/postings";
+import type {
+  RoaCourseListItem,
+  RoaCourseListItemWrite,
+} from "@/types/roaCourses";
+import type {
+  CourseAttendanceListItem,
+  CourseAttendanceListItemWrite,
+} from "@/types/courseAttendance";
+import type {
+  ProgressionListItem,
+  ProgressionListItemWrite,
+} from "@/types/progression";
 import type { SPLookup } from "@/types/base";
 
 // ─── Seed data ───────────────────────────────────────────────────────────────
@@ -110,22 +122,26 @@ const MOCK_ROLES: RoleListItem[] = [
   { Id: DATA_ANA_ID, Title: "Data Analyst", Unit: _lkp(_mission.Id, _mission.Title), UnitId: _mission.Id, Level: "L3", IsHead: false, IsExternal: false, ExternalUnit: null, EstablishmentRank: null, EstablishmentVocation: null, StandardTenureMonths: 24, IsVacant: false, Specialisation: "Data", IsActive: true, Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF },
 ];
 
+// Profile is added so the Development tab has dev data to render across
+// all 3 profiles. Mix is roughly 3 DXO / 3 EOS / 3 MDES so each profile
+// has ≥1 example to exercise.
 const MOCK_INDIVIDUALS: IndividualListItem[] = (
   [
-    ["Tan Wei Ming", "COL", "Software Engineering", "E1001"],
-    ["Siti Aminah",  "LTC", "Software Engineering", "E1002"],
-    ["Raj Kumar",    "LTC", "Cyber",                "E1003"],
-    ["Wong Hui",     "LTC", "Cloud",                "E1004"],
-    ["Jane Lim",     "MAJ", "Software Engineering", "E1005"],
-    ["Alex Chua",    "MAJ", "Data",                 "E1006"],
-    ["Daniel Ong",   "CPT", "Cyber",                "E1007"],
-    ["Priya Nair",   "CPT", "Cyber",                "E1008"],
-    ["Marcus Teo",   "CPT", "Software Engineering", "E1009"],
-  ] as [string, string, string, string][]
-).map(([name, rank, spec, eid], i): IndividualListItem => ({
+    ["Tan Wei Ming", "COL",   "Software Engineering", "E1001", "DXO"],
+    ["Siti Aminah",  "LTC",   "Software Engineering", "E1002", "DXO"],
+    ["Raj Kumar",    "LTC",   "Cyber",                "E1003", "DXO"],
+    ["Wong Hui",     "ME6-1", "Cloud",                "E1004", "MDES"],
+    ["Jane Lim",     "ME5",   "Software Engineering", "E1005", "MDES"],
+    ["Alex Chua",    "ME5",   "Data",                 "E1006", "MDES"],
+    ["Daniel Ong",   "CPT",   "Cyber",                "E1007", "EOS"],
+    ["Priya Nair",   "CPT",   "Cyber",                "E1008", "EOS"],
+    ["Marcus Teo",   "CPT",   "Software Engineering", "E1009", "EOS"],
+  ] as [string, string, string, string, "MDES" | "EOS" | "DXO"][]
+).map(([name, rank, spec, eid, profile], i): IndividualListItem => ({
   Id: i + 1, Title: name,
   Rank: rank, Specialisation: spec, EmployeeId: eid,
   Email: null, IsExternal: false, IsActive: true,
+  Profile: profile,
   Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
 }));
 
@@ -166,6 +182,89 @@ const MOCK_POSTINGS: PostingListItem[] = (
 });
 
 
+// ─── ROA Courses (admin-managed catalogue) ──────────────────────────────────
+
+const MOCK_ROA_COURSES: RoaCourseListItem[] = (
+  [
+    ["MDEC",       "Military Domain Expert Course",   ["MDES"],         1],
+    ["JFC",        "Joint Forces Course",             ["MDES", "EOS"],  2],
+    ["IDSC",       "Intermediate Defence Studies",    ["MDES"],         3],
+    ["AFAC",       "Air Force Advanced Course",       ["EOS", "DXO"],   4],
+    ["JWC",        "Joint Warfare Course",            ["EOS", "DXO"],   5],
+    ["ADSC",       "Advanced Defence Studies Course", ["MDES"],         6],
+    ["CSC/CSC(E)", "Command & Staff Course",          ["EOS", "DXO"],   7],
+  ] as [string, string, ("MDES"|"EOS"|"DXO")[], number][]
+).map(([code, label, profiles, order], i): RoaCourseListItem => ({
+  Id: i + 1, Title: code, Label: label, Profiles: profiles,
+  DisplayOrder: order, IsActive: true,
+  Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+}));
+
+// ─── Course attendance — seed a few rows so the UI has something to show ────
+
+const MOCK_ATTENDANCE: CourseAttendanceListItem[] = (
+  [
+    // Wong (MDES) — completed MDEC, planning IDSC
+    { i: 4, c: 1, Status: "Completed",     Date: "2024-09-15" },
+    { i: 4, c: 3, Status: "Planned",       Date: "2026-08-01" },
+    // Jane (MDES) — completed MDEC + JFC
+    { i: 5, c: 1, Status: "Completed",     Date: "2023-06-10" },
+    { i: 5, c: 2, Status: "Completed",     Date: "2024-11-20" },
+    // Daniel (EOS) — completed JFC, planning AFAC
+    { i: 7, c: 2, Status: "Completed",     Date: "2024-04-05" },
+    { i: 7, c: 4, Status: "Planned",       Date: "2026-10-01" },
+    // Tan (DXO) — completed CSC, NA on AFAC
+    { i: 1, c: 7, Status: "Completed",     Date: "2022-03-15" },
+    { i: 1, c: 4, Status: "NotApplicable", Date: null },
+  ] as Array<{ i: number; c: number; Status: CourseAttendanceListItem["Status"]; Date: string | null }>
+).map((row, idx): CourseAttendanceListItem => {
+  const ind = MOCK_INDIVIDUALS.find((p) => p.Id === row.i)!;
+  const course = MOCK_ROA_COURSES.find((c) => c.Id === row.c)!;
+  return {
+    Id: idx + 1,
+    Title: `${ind.Title} · ${course.Title}`,
+    IndividualId: ind.Id, Individual: _lkp(ind.Id, ind.Title),
+    CourseId: course.Id, Course: _lkp(course.Id, course.Title),
+    Status: row.Status, Date: row.Date,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  };
+});
+
+// ─── Progression rows — non-course fields per individual ────────────────────
+
+const MOCK_PROGRESSION: ProgressionListItem[] = (
+  [
+    // MDES: MASC + Date of Expertise + R-Level (no Track)
+    { i: 4, MASC: 6, DoE: "2024-07-29", Track: null,       RLevel: "R3" },
+    { i: 5, MASC: 5, DoE: "2023-04-12", Track: null,       RLevel: "R2" },
+    { i: 6, MASC: 5, DoE: "2024-01-15", Track: null,       RLevel: "R3" },
+    // EOS: Track + R-Level (no MASC)
+    { i: 7, MASC: null, DoE: null,      Track: "Cyber",    RLevel: "R3" },
+    { i: 8, MASC: null, DoE: null,      Track: "Cyber",    RLevel: "R2" },
+    { i: 9, MASC: null, DoE: null,      Track: "Software", RLevel: "R2" },
+    // DXO: Track + R-Level (no MASC)
+    { i: 1, MASC: null, DoE: null,      Track: "Software", RLevel: "R5" },
+    { i: 2, MASC: null, DoE: null,      Track: "Software", RLevel: "R4" },
+    { i: 3, MASC: null, DoE: null,      Track: "Cyber",    RLevel: "R4" },
+  ] as Array<{
+    i: number; MASC: number | null; DoE: string | null;
+    Track: ProgressionListItem["Track"]; RLevel: ProgressionListItem["RLevel"];
+  }>
+).map((row, idx): ProgressionListItem => {
+  const ind = MOCK_INDIVIDUALS.find((p) => p.Id === row.i)!;
+  return {
+    Id: idx + 1,
+    Title: `${ind.Title} — progression`,
+    IndividualId: ind.Id, Individual: _lkp(ind.Id, ind.Title),
+    MASCLevel: row.MASC, DateOfExpertise: row.DoE,
+    EMFRemarks: null,
+    Track: row.Track, RLevel: row.RLevel, RLevelRemarks: null,
+    CoursesRemarks: null,
+    Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
+  };
+});
+
+
 // ─── localStorage persistence helpers ───────────────────────────────────────
 
 const LS_KEYS = {
@@ -173,6 +272,9 @@ const LS_KEYS = {
   roles: "mock_roles",
   individuals: "mock_individuals",
   postings: "mock_postings",
+  roaCourses: "mock_roa_courses",
+  attendance: "mock_attendance",
+  progression: "mock_progression",
   nextId: "mock_next_id",
 };
 
@@ -204,6 +306,9 @@ let units: UnitListItem[] = lsGet(LS_KEYS.units, MOCK_UNITS.map((u) => ({ ...u }
 let roles: RoleListItem[] = lsGet(LS_KEYS.roles, MOCK_ROLES.map((r) => ({ ...r })));
 let individuals: IndividualListItem[] = lsGet(LS_KEYS.individuals, MOCK_INDIVIDUALS.map((i) => ({ ...i })));
 let postings: PostingListItem[] = lsGet(LS_KEYS.postings, MOCK_POSTINGS.map((p) => ({ ...p })));
+let roaCourses: RoaCourseListItem[] = lsGet(LS_KEYS.roaCourses, MOCK_ROA_COURSES.map((c) => ({ ...c })));
+let attendance: CourseAttendanceListItem[] = lsGet(LS_KEYS.attendance, MOCK_ATTENDANCE.map((a) => ({ ...a })));
+let progression: ProgressionListItem[] = lsGet(LS_KEYS.progression, MOCK_PROGRESSION.map((p) => ({ ...p })));
 
 let nextId: number = lsGet(LS_KEYS.nextId, 1000);
 
@@ -225,6 +330,9 @@ export const mockStore = {
     roles = MOCK_ROLES.map((r) => ({ ...r }));
     individuals = MOCK_INDIVIDUALS.map((i) => ({ ...i }));
     postings = MOCK_POSTINGS.map((p) => ({ ...p }));
+    roaCourses = MOCK_ROA_COURSES.map((c) => ({ ...c }));
+    attendance = MOCK_ATTENDANCE.map((a) => ({ ...a }));
+    progression = MOCK_PROGRESSION.map((p) => ({ ...p }));
     nextId = 1000;
     lsClear();
   },
@@ -233,6 +341,9 @@ export const mockStore = {
   getRoles: () => [...roles],
   getIndividuals: () => [...individuals],
   getPostings: () => [...postings],
+  getRoaCourses: () => [...roaCourses],
+  getCourseAttendance: () => [...attendance],
+  getProgression: () => [...progression],
 
   // ─── UNITS ──────────────────────────────────────────────────────────────────
   createUnit(data: Omit<UnitListItemWrite, "__metadata">): number {
@@ -353,6 +464,7 @@ export const mockStore = {
       Email: data.Email,
       IsExternal: data.IsExternal,
       IsActive: data.IsActive,
+      Profile: data.Profile,
       Created: NOW(),
       Modified: NOW(),
       Author: STAFF,
@@ -434,5 +546,116 @@ export const mockStore = {
   deletePosting(id: number): void {
     postings = postings.filter((p) => p.Id !== id);
     lsSet(LS_KEYS.postings, postings);
+  },
+
+  // ─── ROA COURSES ────────────────────────────────────────────────────────────
+  createRoaCourse(data: Omit<RoaCourseListItemWrite, "__metadata">): number {
+    const id = nextId++;
+    const c: RoaCourseListItem = {
+      Id: id, Title: data.Title, Label: data.Label,
+      Profiles: data.Profiles.results,
+      DisplayOrder: data.DisplayOrder, IsActive: data.IsActive,
+      Created: NOW(), Modified: NOW(), Author: STAFF, Editor: STAFF,
+    };
+    roaCourses = [...roaCourses, c];
+    lsSet(LS_KEYS.roaCourses, roaCourses);
+    lsSet(LS_KEYS.nextId, nextId);
+    return id;
+  },
+  updateRoaCourse(
+    id: number,
+    patch: Partial<Omit<RoaCourseListItemWrite, "__metadata">>,
+  ): void {
+    roaCourses = roaCourses.map((c) =>
+      c.Id === id
+        ? {
+            ...c,
+            ...(patch.Title != null && { Title: patch.Title }),
+            ...(patch.Label != null && { Label: patch.Label }),
+            ...(patch.Profiles && { Profiles: patch.Profiles.results }),
+            ...(patch.DisplayOrder != null && { DisplayOrder: patch.DisplayOrder }),
+            ...(patch.IsActive != null && { IsActive: patch.IsActive }),
+            Modified: NOW(),
+          }
+        : c,
+    );
+    lsSet(LS_KEYS.roaCourses, roaCourses);
+  },
+  deleteRoaCourse(id: number): void {
+    roaCourses = roaCourses.filter((c) => c.Id !== id);
+    lsSet(LS_KEYS.roaCourses, roaCourses);
+  },
+
+  // ─── COURSE ATTENDANCE ──────────────────────────────────────────────────────
+  createCourseAttendance(
+    data: Omit<CourseAttendanceListItemWrite, "__metadata">,
+  ): number {
+    const id = nextId++;
+    const a: CourseAttendanceListItem = {
+      Id: id, Title: data.Title,
+      IndividualId: data.IndividualId,
+      Individual: nextLookupTitle(individuals, data.IndividualId) ?? {
+        Id: data.IndividualId, Title: "?",
+      },
+      CourseId: data.CourseId,
+      Course: nextLookupTitle(roaCourses, data.CourseId) ?? {
+        Id: data.CourseId, Title: "?",
+      },
+      Status: data.Status, Date: data.Date,
+      Created: NOW(), Modified: NOW(), Author: STAFF, Editor: STAFF,
+    };
+    attendance = [...attendance, a];
+    lsSet(LS_KEYS.attendance, attendance);
+    lsSet(LS_KEYS.nextId, nextId);
+    return id;
+  },
+  updateCourseAttendance(
+    id: number,
+    patch: Partial<Omit<CourseAttendanceListItemWrite, "__metadata">>,
+  ): void {
+    attendance = attendance.map((a) =>
+      a.Id === id ? { ...a, ...patch, Modified: NOW() } : a,
+    );
+    lsSet(LS_KEYS.attendance, attendance);
+  },
+  deleteCourseAttendance(id: number): void {
+    attendance = attendance.filter((a) => a.Id !== id);
+    lsSet(LS_KEYS.attendance, attendance);
+  },
+
+  // ─── PROGRESSION ────────────────────────────────────────────────────────────
+  createProgression(
+    data: Omit<ProgressionListItemWrite, "__metadata">,
+  ): number {
+    const id = nextId++;
+    const p: ProgressionListItem = {
+      Id: id, Title: data.Title,
+      IndividualId: data.IndividualId,
+      Individual: nextLookupTitle(individuals, data.IndividualId) ?? {
+        Id: data.IndividualId, Title: "?",
+      },
+      MASCLevel: data.MASCLevel, DateOfExpertise: data.DateOfExpertise,
+      EMFRemarks: data.EMFRemarks,
+      Track: data.Track, RLevel: data.RLevel, RLevelRemarks: data.RLevelRemarks,
+      CoursesRemarks: data.CoursesRemarks,
+      Created: NOW(), Modified: NOW(), Author: STAFF, Editor: STAFF,
+    };
+    progression = [...progression, p];
+    lsSet(LS_KEYS.progression, progression);
+    lsSet(LS_KEYS.nextId, nextId);
+    return id;
+  },
+  updateProgression(
+    id: number,
+    patch: Partial<Omit<ProgressionListItemWrite, "__metadata">>,
+  ): void {
+    progression = progression.map((p) =>
+      p.Id === id ? { ...p, ...patch, Modified: NOW() } : p,
+    );
+    lsSet(LS_KEYS.progression, progression);
+  },
+  deleteProgression(id: number): void {
+    progression = progression.filter((p) => p.Id !== id);
+    lsSet(LS_KEYS.progression, progression);
   },
 };

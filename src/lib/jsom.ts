@@ -177,6 +177,72 @@ export const addChoiceField = (listTitle: string, name: string, choices: string[
 export const addBooleanField = (listTitle: string, name: string, required = false) =>
   addFieldAsXml(listTitle, `<Field Type="Boolean" DisplayName="${name}" Required="${required}" />`)
 
+// Multi-Choice — backed by SP `MultiChoice` field type. Returned as `{ results: [...] }`
+// over REST and as a plain array in JSOM. Used for the Profiles column on
+// ROA_COURSES.
+export const addMultiChoiceField = (listTitle: string, name: string, choices: string[], required = false) =>
+  addFieldAsXml(listTitle, `
+    <Field Type="MultiChoice" DisplayName="${name}" Required="${required}">
+      <CHOICES>${choices.map(c => `<CHOICE>${c}</CHOICE>`).join('')}</CHOICES>
+    </Field>
+  `)
+
+// ── Existence checks for idempotent migrations ──────────────────────────────
+
+/** Returns true if the named list exists on the current web. */
+export async function listExists(title: string): Promise<boolean> {
+  const ctx = getContext()
+  const lists = ctx.get_web().get_lists()
+  ctx.load(lists, 'Include(Title)')
+  await executeQuery(ctx)
+  const enumerator = lists.getEnumerator()
+  while (enumerator.moveNext()) {
+    if (enumerator.get_current().get_title() === title) return true
+  }
+  return false
+}
+
+/** Returns true if the named field exists on the named list. */
+export async function fieldExists(listTitle: string, fieldName: string): Promise<boolean> {
+  const ctx = getContext()
+  const fields = ctx.get_web().get_lists().getByTitle(listTitle).get_fields()
+  ctx.load(fields, 'Include(InternalName,Title)')
+  await executeQuery(ctx)
+  const enumerator = fields.getEnumerator()
+  while (enumerator.moveNext()) {
+    const f = enumerator.get_current()
+    if (f.get_internalName() === fieldName || f.get_title() === fieldName) return true
+  }
+  return false
+}
+
+// ── Web properties — for migration version markers ──────────────────────────
+
+/** Read a web-level property bag value. Returns null if the key doesn't exist. */
+export async function getWebProperty(key: string): Promise<string | null> {
+  const ctx = getContext()
+  const web = ctx.get_web()
+  const props = web.get_allProperties()
+  ctx.load(props)
+  await executeQuery(ctx)
+  try {
+    const v = props.get_fieldValues()[key]
+    return v == null ? null : String(v)
+  } catch {
+    return null
+  }
+}
+
+/** Write a web-level property bag value. Persists across page loads. */
+export async function setWebProperty(key: string, value: string): Promise<void> {
+  const ctx = getContext()
+  const web = ctx.get_web()
+  const props = web.get_allProperties()
+  props.set_item(key, value)
+  web.update()
+  await executeQuery(ctx)
+}
+
 // ── Permission Management ────────────────────────────────────────────────────
 
 export async function breakPermissionInheritance(

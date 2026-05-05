@@ -20,10 +20,7 @@ import { RoleFormDialog } from "../dialogs/RoleFormDialog";
 import { PostingFormDialog } from "../dialogs/PostingFormDialog";
 import { useDeleteUnit, useDeleteRole } from "@/hooks/useMutations";
 import { useConfirm } from "../shared/ConfirmDialog";
-
-const NAVY = "#01219C";
-const ACCENT = "#008ED0";
-const CORAL = "#F9866B";
+import { NAVY, ACCENT, CORAL, MONO } from "@/lib/tokens";
 
 type EditableProps = {
   editable: true;
@@ -130,7 +127,7 @@ export function OrgChart(props: Props) {
                 border: `1px dashed ${ACCENT}`,
                 borderRadius: 1,
                 color: NAVY,
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 12,
                 cursor: "pointer",
                 "&:hover": { bgcolor: "rgba(0,142,208,0.08)" },
@@ -313,7 +310,7 @@ function UnitCard(props: UnitCardProps) {
         {unit.Code && (
           <Typography
             sx={{
-              fontFamily: '"Geist Mono", monospace',
+              fontFamily: MONO,
               fontSize: 11,
               color: "rgba(255,255,255,0.65)",
             }}
@@ -390,7 +387,7 @@ function UnitCard(props: UnitCardProps) {
             display: "flex",
             alignItems: "center",
             gap: 1,
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             fontSize: 11,
           }}
         >
@@ -414,7 +411,7 @@ function UnitCard(props: UnitCardProps) {
                 color: NAVY,
                 border: "none",
                 borderRadius: 0.5,
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 11,
                 fontWeight: 600,
                 cursor: "pointer",
@@ -478,7 +475,7 @@ function RoleRow({
         {est && (
           <Box
             sx={{
-              fontFamily: '"Geist Mono", monospace',
+              fontFamily: MONO,
               fontSize: 10,
               px: 0.75, py: 0.25,
               borderRadius: 0.5,
@@ -498,7 +495,7 @@ function RoleRow({
           <Box
             sx={{
               ml: "auto",
-              fontFamily: '"Geist Mono", monospace',
+              fontFamily: MONO,
               fontSize: 10,
               px: 0.75, py: 0.25,
               borderRadius: 0.5,

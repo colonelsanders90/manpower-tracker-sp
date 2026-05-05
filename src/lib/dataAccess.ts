@@ -27,6 +27,21 @@ import {
   type PostingListItem,
   type PostingListItemWrite,
 } from "@/types/postings";
+import {
+  ROA_COURSES_LIST,
+  type RoaCourseListItem,
+  type RoaCourseListItemWrite,
+} from "@/types/roaCourses";
+import {
+  COURSE_ATTENDANCE_LIST,
+  type CourseAttendanceListItem,
+  type CourseAttendanceListItemWrite,
+} from "@/types/courseAttendance";
+import {
+  PROGRESSION_LIST,
+  type ProgressionListItem,
+  type ProgressionListItemWrite,
+} from "@/types/progression";
 import { mockStore } from "./mockStore";
 
 const IS_DEV = (import.meta.env.MODE !== 'production');
@@ -169,11 +184,124 @@ async function deletePosting(id: number): Promise<void> {
   await spDelete(`/lists/getbytitle('${POSTINGS_LIST}')/items(${id})`);
 }
 
+// ─── ROA Courses ────────────────────────────────────────────────────────────
+
+type RoaCourse_Body = Omit<RoaCourseListItemWrite, "__metadata">;
+
+async function getRoaCourses(): Promise<RoaCourseListItem[]> {
+  if (IS_DEV) return mockStore.getRoaCourses();
+  // No lookup expansions on this list; Profiles is a multi-choice (returned as
+  // {results: [...]} on read; we normalise to a plain string[] in the hook).
+  return spGetAll<RoaCourseListItem>(
+    `/lists/getbytitle('${ROA_COURSES_LIST}')/items?$select=*`,
+  );
+}
+
+async function createRoaCourse(data: RoaCourse_Body): Promise<number> {
+  if (IS_DEV) return mockStore.createRoaCourse(data);
+  const created = await spPost<{ Id: number }>(
+    `/lists/getbytitle('${ROA_COURSES_LIST}')/items`,
+    { ...data, __metadata: { type: "SP.Data.ROA_COURSESListItem" } },
+  );
+  return created.Id;
+}
+
+async function updateRoaCourse(
+  id: number,
+  patch: Partial<RoaCourse_Body>,
+): Promise<void> {
+  if (IS_DEV) return mockStore.updateRoaCourse(id, patch);
+  await spUpdate(`/lists/getbytitle('${ROA_COURSES_LIST}')/items(${id})`, {
+    ...patch,
+    __metadata: { type: "SP.Data.ROA_COURSESListItem" },
+  });
+}
+
+async function deleteRoaCourse(id: number): Promise<void> {
+  if (IS_DEV) return mockStore.deleteRoaCourse(id);
+  await spDelete(`/lists/getbytitle('${ROA_COURSES_LIST}')/items(${id})`);
+}
+
+// ─── Course Attendance ──────────────────────────────────────────────────────
+
+type Attendance_Body = Omit<CourseAttendanceListItemWrite, "__metadata">;
+
+async function getCourseAttendance(): Promise<CourseAttendanceListItem[]> {
+  if (IS_DEV) return mockStore.getCourseAttendance();
+  return spGetAll<CourseAttendanceListItem>(
+    `/lists/getbytitle('${COURSE_ATTENDANCE_LIST}')/items?$select=*,Individual/Id,Individual/Title,Course/Id,Course/Title&$expand=Individual,Course`,
+  );
+}
+
+async function createCourseAttendance(data: Attendance_Body): Promise<number> {
+  if (IS_DEV) return mockStore.createCourseAttendance(data);
+  const created = await spPost<{ Id: number }>(
+    `/lists/getbytitle('${COURSE_ATTENDANCE_LIST}')/items`,
+    { ...data, __metadata: { type: "SP.Data.INDIVIDUAL_COURSE_ATTENDANCEListItem" } },
+  );
+  return created.Id;
+}
+
+async function updateCourseAttendance(
+  id: number,
+  patch: Partial<Attendance_Body>,
+): Promise<void> {
+  if (IS_DEV) return mockStore.updateCourseAttendance(id, patch);
+  await spUpdate(`/lists/getbytitle('${COURSE_ATTENDANCE_LIST}')/items(${id})`, {
+    ...patch,
+    __metadata: { type: "SP.Data.INDIVIDUAL_COURSE_ATTENDANCEListItem" },
+  });
+}
+
+async function deleteCourseAttendance(id: number): Promise<void> {
+  if (IS_DEV) return mockStore.deleteCourseAttendance(id);
+  await spDelete(`/lists/getbytitle('${COURSE_ATTENDANCE_LIST}')/items(${id})`);
+}
+
+// ─── Progression ────────────────────────────────────────────────────────────
+
+type Progression_Body = Omit<ProgressionListItemWrite, "__metadata">;
+
+async function getProgression(): Promise<ProgressionListItem[]> {
+  if (IS_DEV) return mockStore.getProgression();
+  return spGetAll<ProgressionListItem>(
+    `/lists/getbytitle('${PROGRESSION_LIST}')/items?$select=*,Individual/Id,Individual/Title&$expand=Individual`,
+  );
+}
+
+async function createProgression(data: Progression_Body): Promise<number> {
+  if (IS_DEV) return mockStore.createProgression(data);
+  const created = await spPost<{ Id: number }>(
+    `/lists/getbytitle('${PROGRESSION_LIST}')/items`,
+    { ...data, __metadata: { type: "SP.Data.INDIVIDUAL_PROGRESSIONListItem" } },
+  );
+  return created.Id;
+}
+
+async function updateProgression(
+  id: number,
+  patch: Partial<Progression_Body>,
+): Promise<void> {
+  if (IS_DEV) return mockStore.updateProgression(id, patch);
+  await spUpdate(`/lists/getbytitle('${PROGRESSION_LIST}')/items(${id})`, {
+    ...patch,
+    __metadata: { type: "SP.Data.INDIVIDUAL_PROGRESSIONListItem" },
+  });
+}
+
+async function deleteProgression(id: number): Promise<void> {
+  if (IS_DEV) return mockStore.deleteProgression(id);
+  await spDelete(`/lists/getbytitle('${PROGRESSION_LIST}')/items(${id})`);
+}
+
 export const dataAccess = {
   getUnits,
   getRoles,
   getIndividuals,
   getPostings,
+  getRoaCourses,
+  getCourseAttendance,
+  getProgression,
   createUnit,
   updateUnit,
   deleteUnit,
@@ -186,4 +314,13 @@ export const dataAccess = {
   createPosting,
   updatePosting,
   deletePosting,
+  createRoaCourse,
+  updateRoaCourse,
+  deleteRoaCourse,
+  createCourseAttendance,
+  updateCourseAttendance,
+  deleteCourseAttendance,
+  createProgression,
+  updateProgression,
+  deleteProgression,
 };

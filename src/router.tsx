@@ -11,6 +11,8 @@ import { IndividualsPage } from "@/routes/individuals";
 import { IndividualDetailPage } from "@/routes/individualDetail";
 import { RolesPage } from "@/routes/roles";
 import { RoleDetailPage } from "@/routes/roleDetail";
+import { DevelopmentPage } from "@/routes/development";
+import { AdminRoaCoursesPage } from "@/routes/adminRoaCourses";
 import { ProvisionPage } from "@/routes/provision";
 import { AdminPostingsPage } from "@/routes/adminPostings";
 import { AdminPeoplePage } from "@/routes/adminPeople";
@@ -60,6 +62,24 @@ const roleDetailRoute = createRoute({
   component: RoleDetailPage,
 });
 
+// Development tab — profile filter via search param ("MDES" | "EOS" | "DXO")
+const developmentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/development",
+  validateSearch: (search: Record<string, unknown>): { profile?: "MDES" | "EOS" | "DXO" } => {
+    const p = search.profile;
+    if (p === "MDES" || p === "EOS" || p === "DXO") return { profile: p };
+    return {};
+  },
+  component: DevelopmentPage,
+});
+
+const adminRoaCoursesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/roa-courses",
+  component: AdminRoaCoursesPage,
+});
+
 const adminPostingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/postings",
@@ -85,6 +105,8 @@ const routeTree = rootRoute.addChildren([
   individualDetailRoute,
   rolesRoute,
   roleDetailRoute,
+  developmentRoute,
+  adminRoaCoursesRoute,
   adminPostingsRoute,
   adminPeopleRoute,
   provisionRoute,

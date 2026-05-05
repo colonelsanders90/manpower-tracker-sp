@@ -7,9 +7,7 @@ import { usePostings } from "@/hooks/usePostings";
 import { FilledRolesDonut } from "@/components/charts/FilledRolesDonut";
 import { UpcomingMovements } from "@/components/charts/UpcomingMovements";
 import { LoadingBlock, ErrorBlock } from "./_shared";
-
-const NAVY = "#01219C";
-const CORAL = "#F9866B";
+import { NAVY, CORAL, MONO } from "@/lib/tokens";
 
 export function DashboardPage() {
   const units = useUnits();
@@ -178,7 +176,7 @@ function LensCard({
         <Box
           sx={{
             ml: "auto",
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             color: "primary.main",
           }}
         >
@@ -226,7 +224,7 @@ function Stat({
         <Box
           sx={{
             mt: 0.75,
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             fontSize: 10,
             color: "primary.main",
             letterSpacing: "0.04em",

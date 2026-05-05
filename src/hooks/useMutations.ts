@@ -25,6 +25,11 @@ import { UNITS_KEY } from "./useUnits";
 import { ROLES_KEY } from "./useRoles";
 import { INDIVIDUALS_KEY } from "./useIndividuals";
 import { POSTINGS_KEY } from "./usePostings";
+import { ROA_COURSES_KEY } from "./useRoaCourses";
+import { COURSE_ATTENDANCE_KEY } from "./useCourseAttendance";
+import { PROGRESSION_KEY } from "./useProgression";
+import type { Profile, RoaStatus, CompetencyTrack, RLevel } from "@/lib/progression";
+import { formatName } from "@/lib/formatters";
 
 function useInvalidate() {
   const qc = useQueryClient();
@@ -246,6 +251,8 @@ export type CreateIndividualInput = {
   employeeId?: string | null;
   email?: string | null;
   isExternal: boolean;
+  /** v2 — null = unassigned. Admin can edit later via the Development tab. */
+  profile?: import("@/lib/progression").Profile | null;
 };
 
 export function useCreateIndividual() {
@@ -261,6 +268,7 @@ export function useCreateIndividual() {
         Email: input.email?.trim() || null,
         IsExternal: input.isExternal,
         IsActive: true,
+        Profile: input.profile ?? null,
       });
     },
     onSuccess: () => invalidate(INDIVIDUALS_KEY),
@@ -274,6 +282,7 @@ export type UpdateIndividualInput = {
   specialisation?: string | null;
   employeeId?: string | null;
   email?: string | null;
+  profile?: Profile | null;
 };
 
 export function useUpdateIndividual() {
@@ -281,13 +290,17 @@ export function useUpdateIndividual() {
   return useMutation({
     mutationFn: async (input: UpdateIndividualInput) => {
       if (!input.name.trim()) throw new Error("Name is required");
-      await dataAccess.updateIndividual(input.id, {
+      const patch: Parameters<typeof dataAccess.updateIndividual>[1] = {
         Title: input.name.trim(),
         Rank: input.rank?.trim() || null,
         Specialisation: input.specialisation?.trim() || null,
         EmployeeId: input.employeeId?.trim() || null,
         Email: input.email?.trim() || null,
-      });
+      };
+      // Only update Profile if explicitly provided — otherwise leave the
+      // existing value untouched. Useful when the dialog doesn't surface the field.
+      if ("profile" in input) patch.Profile = input.profile ?? null;
+      await dataAccess.updateIndividual(input.id, patch);
     },
     onSuccess: () => invalidate(INDIVIDUALS_KEY),
   });
@@ -352,6 +365,7 @@ export function useCreatePosting() {
           Email: null,
           IsExternal: true,
           IsActive: true,
+          Profile: null, // externals don't track progression
         });
       }
       if (individualId == null) throw new Error("Individual is required");
@@ -498,5 +512,189 @@ export function useDeletePosting() {
       }
     },
     onSuccess: () => invalidate(POSTINGS_KEY, ROLES_KEY),
+  });
+}
+
+// ─── ROA Courses (admin-managed catalogue) ──────────────────────────────────
+
+export type RoaCourseInput = {
+  /** course code, e.g. "MDEC" */
+  title: string;
+  label: string;
+  profiles: Profile[];
+  displayOrder: number;
+  isActive: boolean;
+};
+
+export function useCreateRoaCourse() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (input: RoaCourseInput) => {
+      if (!input.title.trim()) throw new Error("Course code is required");
+      if (!input.label.trim()) throw new Error("Course label is required");
+      // Uniqueness check on Title (course code)
+      const existing = await dataAccess.getRoaCourses();
+      if (existing.some((c) => c.Title.toLowerCase() === input.title.trim().toLowerCase())) {
+        throw new Error(`Course code "${input.title}" already exists`);
+      }
+      await dataAccess.createRoaCourse({
+        Title: input.title.trim(),
+        Label: input.label.trim(),
+        Profiles: { results: input.profiles },
+        DisplayOrder: input.displayOrder,
+        IsActive: input.isActive,
+      });
+    },
+    onSuccess: () => invalidate(ROA_COURSES_KEY),
+  });
+}
+
+export function useUpdateRoaCourse() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: number; input: Partial<RoaCourseInput> }) => {
+      const patch: Parameters<typeof dataAccess.updateRoaCourse>[1] = {};
+      if (input.title != null) patch.Title = input.title.trim();
+      if (input.label != null) patch.Label = input.label.trim();
+      if (input.profiles != null) patch.Profiles = { results: input.profiles };
+      if (input.displayOrder != null) patch.DisplayOrder = input.displayOrder;
+      if (input.isActive != null) patch.IsActive = input.isActive;
+      await dataAccess.updateRoaCourse(id, patch);
+    },
+    onSuccess: () => invalidate(ROA_COURSES_KEY),
+  });
+}
+
+export function useDeleteRoaCourse() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      // FK guard: if attendance rows reference this course, soft-delete
+      // (set IsActive=false). Hard-delete only when there are no references.
+      const refs = await dataAccess.getCourseAttendance();
+      const hasRefs = refs.some((r) => r.CourseId === id);
+      if (hasRefs) {
+        await dataAccess.updateRoaCourse(id, { IsActive: false });
+      } else {
+        await dataAccess.deleteRoaCourse(id);
+      }
+    },
+    onSuccess: () => invalidate(ROA_COURSES_KEY, COURSE_ATTENDANCE_KEY),
+  });
+}
+
+// ─── Course Attendance (upsert by individual + course) ──────────────────────
+
+export type AttendanceInput = {
+  individualId: number;
+  courseId: number;
+  status: RoaStatus;
+  date: string | null;
+};
+
+/**
+ * Upsert one (individual, course) attendance row. The app-level invariant
+ * is "at most one row per pair" — this hook checks for an existing row and
+ * either updates it or inserts a new one.
+ *
+ * If status is NotPlanned and no row exists, this is a no-op (saves an empty
+ * write). If status is NotPlanned and a row DOES exist, the row is deleted
+ * (cleaner than carrying around explicit-NotPlanned rows).
+ */
+export function useUpsertAttendance() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (input: AttendanceInput) => {
+      const all = await dataAccess.getCourseAttendance();
+      const existing = all.find(
+        (a) => a.IndividualId === input.individualId && a.CourseId === input.courseId,
+      );
+
+      if (input.status === "NotPlanned") {
+        if (existing) await dataAccess.deleteCourseAttendance(existing.Id);
+        return;
+      }
+
+      // Compose a friendly Title for SP views
+      const individuals = await dataAccess.getIndividuals();
+      const courses = await dataAccess.getRoaCourses();
+      const ind = individuals.find((i) => i.Id === input.individualId);
+      const course = courses.find((c) => c.Id === input.courseId);
+      const title = `${formatName(ind?.Rank, ind?.Title ?? "?")} · ${course?.Title ?? "?"}`;
+
+      if (existing) {
+        await dataAccess.updateCourseAttendance(existing.Id, {
+          Status: input.status,
+          Date: input.date,
+        });
+      } else {
+        await dataAccess.createCourseAttendance({
+          Title: title,
+          IndividualId: input.individualId,
+          CourseId: input.courseId,
+          Status: input.status,
+          Date: input.date,
+        });
+      }
+    },
+    onSuccess: () => invalidate(COURSE_ATTENDANCE_KEY),
+  });
+}
+
+export function useDeleteAttendance() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (id: number) => dataAccess.deleteCourseAttendance(id),
+    onSuccess: () => invalidate(COURSE_ATTENDANCE_KEY),
+  });
+}
+
+// ─── Progression (upsert by individual) ─────────────────────────────────────
+
+export type ProgressionInput = {
+  individualId: number;
+  mascLevel: number | null;
+  dateOfExpertise: string | null;
+  emfRemarks: string | null;
+  track: CompetencyTrack | null;
+  rLevel: RLevel | null;
+  rLevelRemarks: string | null;
+  coursesRemarks: string | null;
+};
+
+/**
+ * Upsert the progression row for one individual. Invariant: at most one row
+ * per individual.
+ */
+export function useUpsertProgression() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (input: ProgressionInput) => {
+      const all = await dataAccess.getProgression();
+      const existing = all.find((p) => p.IndividualId === input.individualId);
+
+      const individuals = await dataAccess.getIndividuals();
+      const ind = individuals.find((i) => i.Id === input.individualId);
+      const title = `${formatName(ind?.Rank, ind?.Title ?? "?")} — progression`;
+
+      const body = {
+        Title: title,
+        IndividualId: input.individualId,
+        MASCLevel: input.mascLevel,
+        DateOfExpertise: input.dateOfExpertise,
+        EMFRemarks: input.emfRemarks,
+        Track: input.track,
+        RLevel: input.rLevel,
+        RLevelRemarks: input.rLevelRemarks,
+        CoursesRemarks: input.coursesRemarks,
+      };
+
+      if (existing) {
+        await dataAccess.updateProgression(existing.Id, body);
+      } else {
+        await dataAccess.createProgression(body);
+      }
+    },
+    onSuccess: () => invalidate(PROGRESSION_KEY),
   });
 }

@@ -3,10 +3,7 @@
 // Two layered circles with stroke-dasharray make the ring slices.
 
 import { Box, Paper, Stack, Typography } from "@mui/material";
-
-const NAVY = "#01219C";
-const ACCENT = "#008ED0";
-const CORAL = "#F9866B";
+import { NAVY, ACCENT, CORAL } from "@/lib/tokens";
 
 type Props = {
   filled: number;

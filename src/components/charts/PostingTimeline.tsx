@@ -14,6 +14,7 @@ import {
   STATUS_BAR_TEXT,
 } from "@/lib/timeline";
 import { formatName } from "@/lib/formatters";
+import { CORAL, MONO } from "@/lib/tokens";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
 import type { IndividualListItem } from "@/types/individuals";
@@ -84,7 +85,7 @@ export function PostingTimeline({
                 top: 0,
                 left: `${pct}%`,
                 transform: "translateX(-50%)",
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontWeight: 500,
                 fontSize: 11,
               }}
@@ -137,7 +138,7 @@ export function PostingTimeline({
             top: 0, bottom: 0,
             left: `${win.todayPct}%`,
             width: "1px",
-            bgcolor: "#F9866B",
+            bgcolor: CORAL,
             zIndex: 10,
           }}
         />
@@ -148,9 +149,9 @@ export function PostingTimeline({
             left: `${win.todayPct}%`,
             transform: "translate(-50%, -100%)",
             pb: 0.5,
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             fontSize: 9,
-            color: "#F9866B",
+            color: CORAL,
             zIndex: 10,
           }}
         >
@@ -361,7 +362,7 @@ function OutOfWindowList({
             </Link>
             <Box
               sx={{
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}

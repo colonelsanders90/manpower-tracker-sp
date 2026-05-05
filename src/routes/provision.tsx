@@ -30,7 +30,10 @@ import { loadJsom } from "@/lib/jsom";
 import {
   PROVISIONERS,
   SCHEMA_VERSION,
+  V2_MIGRATIONS,
   runProvisioning,
+  runMigrationV2,
+  readSchemaVersion,
   type ProvisioningStepResult,
 } from "@/provisioning/provisioningSequence";
 import {
@@ -60,6 +63,16 @@ export function ProvisionPage() {
   const [seedRunning, setSeedRunning] = useState(false);
   const [seedDone, setSeedDone] = useState(false);
 
+  // ── v2 migration state ─────────────────────────────────────────────────────
+  // currentSchema null = unread / loading; number = the version stored in the
+  // SP web property (1 if no marker exists, meaning we have the v1 lists only).
+  const [currentSchema, setCurrentSchema] = useState<number | null>(null);
+  const [migrationSteps, setMigrationSteps] = useState<StepUi[]>(() =>
+    V2_MIGRATIONS.map((m) => ({ name: m.name, state: "pending" as StepState })),
+  );
+  const [migrationRunning, setMigrationRunning] = useState(false);
+  const [migrationDone, setMigrationDone] = useState(false);
+
   // Load JSOM scripts lazily — they must NOT be in index.html because
   // MicrosoftAjax.js patches prototypes before React boots. Loading here
   // (after React is already running) is safe.
@@ -72,6 +85,14 @@ export function ProvisionPage() {
       .then(() => setJsomReady(true))
       .catch((err) => setJsomError(err instanceof Error ? err.message : String(err)));
   }, []);
+
+  // Once JSOM is ready, read the current schema version from the web property.
+  useEffect(() => {
+    if (!jsomReady) return;
+    readSchemaVersion()
+      .then((v) => setCurrentSchema(v))
+      .catch(() => setCurrentSchema(1)); // safest default — assume v1
+  }, [jsomReady]);
 
   if (userLoading) {
     return <Centered><CircularProgress /></Centered>;
@@ -182,6 +203,43 @@ export function ProvisionPage() {
     await runSeed(handleSeedProgress);
     setSeedRunning(false);
     setSeedDone(true);
+  }
+
+  async function startMigration() {
+    setMigrationRunning(true);
+    setMigrationDone(false);
+    setMigrationSteps((prev) => prev.map((s) => ({ ...s, state: "pending" as StepState })));
+
+    let i = 0;
+    const handleProgress = (r: ProvisioningStepResult) => {
+      setMigrationSteps((prev) =>
+        prev.map((s, idx) =>
+          idx === i
+            ? r.status === "ok"
+              ? { ...s, state: "ok" }
+              : { ...s, state: "error", detail: r.error }
+            : s,
+        ),
+      );
+      i++;
+      setMigrationSteps((prev) =>
+        prev.map((s, idx) =>
+          idx === i && s.state === "pending" ? { ...s, state: "running" } : s,
+        ),
+      );
+    };
+
+    setMigrationSteps((prev) =>
+      prev.map((s, idx) => (idx === 0 ? { ...s, state: "running" } : s)),
+    );
+
+    await runMigrationV2(handleProgress);
+    setMigrationRunning(false);
+    setMigrationDone(true);
+
+    // Re-read so the banner disappears on success without a page reload.
+    const v = await readSchemaVersion();
+    setCurrentSchema(v);
   }
 
   const allOk = done && steps.every((s) => s.state === "ok");
@@ -322,6 +380,76 @@ export function ProvisionPage() {
             </Alert>
           )}
         </Paper>
+
+        {/* ── v1 → v2 migration ─────────────────────────────────────────── */}
+        {currentSchema != null && currentSchema < SCHEMA_VERSION && (
+          <>
+            <Box>
+              <Typography variant="h5" sx={{ mt: 1 }}>
+                Schema v{currentSchema} → v{SCHEMA_VERSION} migration
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Adds the Development feature: ROA course catalogue, attendance
+                tracking, and per-individual progression. Existing UNITS,
+                ROLES, INDIVIDUALS, POSTINGS data is <strong>preserved</strong>.
+                Idempotent — safe to re-run on partial failure.
+              </Typography>
+            </Box>
+
+            <Paper sx={{ p: 3 }}>
+              <List dense>
+                {migrationSteps.map((s) => (
+                  <ListItem key={s.name} sx={{ alignItems: "flex-start" }}>
+                    <ListItemIcon sx={{ minWidth: 36, pt: 0.5 }}>
+                      <StepIcon state={s.state} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={s.name}
+                      secondary={s.state === "error" ? s.detail : null}
+                      primaryTypographyProps={{
+                        sx: { fontFamily: "Sometype Mono, monospace" },
+                      }}
+                      secondaryTypographyProps={{ color: "error" }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  disabled={migrationRunning}
+                  onClick={startMigration}
+                >
+                  {migrationRunning
+                    ? "Migrating…"
+                    : migrationDone
+                      ? "Re-run migration"
+                      : `Run v${currentSchema} → v${SCHEMA_VERSION} migration`}
+                </Button>
+                {migrationRunning && <CircularProgress size={28} />}
+              </Stack>
+
+              {migrationDone && migrationSteps.every((s) => s.state === "ok") && (
+                <Alert severity="success" sx={{ mt: 3 }}>
+                  Migration complete. The Development tab is now live.
+                </Alert>
+              )}
+              {migrationSteps.some((s) => s.state === "error") && (
+                <Alert severity="error" sx={{ mt: 3 }}>
+                  Migration halted. Re-run after fixing the error — every step
+                  is idempotent.
+                </Alert>
+              )}
+            </Paper>
+          </>
+        )}
+
+        {currentSchema === SCHEMA_VERSION && (
+          <Alert severity="success">
+            Schema is up to date (v{SCHEMA_VERSION}).
+          </Alert>
+        )}
       </Stack>
     </Box>
   );

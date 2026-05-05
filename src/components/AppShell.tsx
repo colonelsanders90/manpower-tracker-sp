@@ -22,20 +22,22 @@ import logoOnNavy from "@/assets/raid/White_RAiD_onNavy.svg";
 import { mockStore } from "@/lib/mockStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { APP_VERSION } from "@/version";
+import { NAVY, ACCENT, MONO } from "@/lib/tokens";
 
 const SIDEBAR_WIDTH = 220;
 const APPBAR_HEIGHT = 52;
-const NAVY = "#01219C";
+// 25% ACCENT — used once for the active nav-link highlight.
 const ACTIVE_BG = "rgba(0,142,208,0.25)";
-const ACCENT = "#008ED0";
 
 const NAV_LINKS: { to: string; label: string; admin?: boolean }[] = [
   { to: "/", label: "Dashboard" },
   { to: "/org", label: "Org Structure" },
   { to: "/individuals", label: "Individuals" },
   { to: "/roles", label: "Roles" },
+  { to: "/development", label: "Development" },
   { to: "/admin/postings", label: "Admin · Postings", admin: true },
   { to: "/admin/people", label: "Admin · People", admin: true },
+  { to: "/admin/roa-courses", label: "Admin · ROA Courses", admin: true },
   { to: "/admin/provision", label: "Admin · Provision", admin: true },
 ];
 
@@ -132,7 +134,7 @@ export function AppShell() {
                   primary={l.label}
                   primaryTypographyProps={{
                     sx: {
-                      fontFamily: '"Geist Mono", "SF Mono", monospace',
+                      fontFamily: MONO,
                       fontSize: 12,
                       fontWeight: 500,
                       letterSpacing: "0.04em",
@@ -150,7 +152,7 @@ export function AppShell() {
             px: 2.5, py: 2,
             borderTop: "1px solid rgba(255,255,255,0.1)",
             color: "rgba(255,255,255,0.6)",
-            fontFamily: '"Geist Mono", "SF Mono", monospace',
+            fontFamily: MONO,
             fontSize: 10,
             textTransform: "uppercase",
             letterSpacing: "0.12em",
@@ -230,7 +232,7 @@ export function AppShell() {
               sx={{
                 ml: 2,
                 color: "rgba(255,255,255,0.6)",
-                fontFamily: '"Geist Mono", "SF Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 12,
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
@@ -246,7 +248,7 @@ export function AppShell() {
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 0.5,
                 color: "rgba(255,255,255,0.4)",
-                fontFamily: '"Geist Mono", "SF Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 letterSpacing: "0.08em",
               }}

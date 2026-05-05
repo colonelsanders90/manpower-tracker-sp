@@ -7,7 +7,11 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Switch,
   TextField,
@@ -18,6 +22,7 @@ import {
   useUpdateIndividual,
 } from "@/hooks/useMutations";
 import { AdPersonPicker } from "@/components/shared/AdPersonPicker";
+import { PROFILES, type Profile } from "@/lib/progression";
 
 type IndividualEdit = {
   id: number;
@@ -27,6 +32,7 @@ type IndividualEdit = {
   employeeId: string | null;
   email: string | null;
   isExternal: boolean;
+  profile: Profile | null;
 };
 
 type Props = {
@@ -43,6 +49,8 @@ export function IndividualFormDialog({ open, onClose, individual }: Props) {
   const [employeeId, setEmployeeId] = useState(individual?.employeeId ?? "");
   const [email, setEmail] = useState(individual?.email ?? "");
   const [isExternal, setIsExternal] = useState(individual?.isExternal ?? false);
+  // "" = unassigned/null. Used as the empty string for MUI Select's value.
+  const [profile, setProfile] = useState<Profile | "">(individual?.profile ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const create = useCreateIndividual();
@@ -57,6 +65,7 @@ export function IndividualFormDialog({ open, onClose, individual }: Props) {
       setEmployeeId(individual?.employeeId ?? "");
       setEmail(individual?.email ?? "");
       setIsExternal(individual?.isExternal ?? false);
+      setProfile(individual?.profile ?? "");
       setError(null);
     }
   }, [open, individual]);
@@ -72,6 +81,7 @@ export function IndividualFormDialog({ open, onClose, individual }: Props) {
           specialisation: spec || null,
           employeeId: employeeId || null,
           email: email || null,
+          profile: profile || null,
         });
       } else {
         await create.mutateAsync({
@@ -81,6 +91,7 @@ export function IndividualFormDialog({ open, onClose, individual }: Props) {
           employeeId: employeeId || null,
           email: email || null,
           isExternal,
+          profile: profile || null,
         });
       }
       onClose();
@@ -161,6 +172,24 @@ export function IndividualFormDialog({ open, onClose, individual }: Props) {
             fullWidth
             disabled={busy}
           />
+          <FormControl fullWidth disabled={busy}>
+            <InputLabel id="ind-profile-label">Profile</InputLabel>
+            <Select
+              labelId="ind-profile-label"
+              label="Profile"
+              value={profile}
+              onChange={(e) => setProfile(e.target.value as Profile | "")}
+            >
+              <MenuItem value="">
+                <em>(unassigned)</em>
+              </MenuItem>
+              {PROFILES.map((p) => (
+                <MenuItem key={p} value={p}>
+                  {p}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           {!isEdit && (
             <FormControlLabel
               control={
