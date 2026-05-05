@@ -126,13 +126,19 @@ export async function spDelete(path: string): Promise<void> {
 }
 
 // Get ListItemEntityTypeFullName for a list (needed in POST __metadata).
-// REQUIRED for lists whose names contain underscores — hardcoded
-// `SP.Data.${listName}ListItem` does not resolve for them. Fetch once before
-// any write loop and reuse for all writes to that list.
+// REQUIRED for lists whose names contain underscores or other special chars —
+// hardcoded `SP.Data.${listName}ListItem` does not resolve for them
+// (SP encodes `_` as `_x005f_` in the EntityType, etc.). Cached after first
+// fetch so writes don't pay the round-trip on every call.
+const _listItemTypeCache = new Map<string, string>()
+
 export async function getListItemType(listName: string): Promise<string> {
+  const cached = _listItemTypeCache.get(listName)
+  if (cached) return cached
   const res = await spGet<{ ListItemEntityTypeFullName: string }>(
     `/lists/getbytitle('${listName}')?$select=ListItemEntityTypeFullName`
   )
+  _listItemTypeCache.set(listName, res.ListItemEntityTypeFullName)
   return res.ListItemEntityTypeFullName
 }
 

@@ -6,7 +6,7 @@
 // Lookup fields are written by id (e.g. UnitId) and read with $expand so the
 // app code sees { Id, Title } pairs.
 
-import { spGetAll, spPost, spUpdate, spDelete } from "./sharepoint";
+import { spGetAll, spPost, spUpdate, spDelete, getListItemType } from "./sharepoint";
 import {
   UNITS_LIST,
   type UnitListItem,
@@ -199,9 +199,10 @@ async function getRoaCourses(): Promise<RoaCourseListItem[]> {
 
 async function createRoaCourse(data: RoaCourse_Body): Promise<number> {
   if (IS_DEV) return mockStore.createRoaCourse(data);
+  const type = await getListItemType(ROA_COURSES_LIST);
   const created = await spPost<{ Id: number }>(
     `/lists/getbytitle('${ROA_COURSES_LIST}')/items`,
-    { ...data, __metadata: { type: "SP.Data.ROA_COURSESListItem" } },
+    { ...data, __metadata: { type } },
   );
   return created.Id;
 }
@@ -211,9 +212,10 @@ async function updateRoaCourse(
   patch: Partial<RoaCourse_Body>,
 ): Promise<void> {
   if (IS_DEV) return mockStore.updateRoaCourse(id, patch);
+  const type = await getListItemType(ROA_COURSES_LIST);
   await spUpdate(`/lists/getbytitle('${ROA_COURSES_LIST}')/items(${id})`, {
     ...patch,
-    __metadata: { type: "SP.Data.ROA_COURSESListItem" },
+    __metadata: { type },
   });
 }
 
@@ -235,9 +237,10 @@ async function getCourseAttendance(): Promise<CourseAttendanceListItem[]> {
 
 async function createCourseAttendance(data: Attendance_Body): Promise<number> {
   if (IS_DEV) return mockStore.createCourseAttendance(data);
+  const type = await getListItemType(COURSE_ATTENDANCE_LIST);
   const created = await spPost<{ Id: number }>(
     `/lists/getbytitle('${COURSE_ATTENDANCE_LIST}')/items`,
-    { ...data, __metadata: { type: "SP.Data.INDIVIDUAL_COURSE_ATTENDANCEListItem" } },
+    { ...data, __metadata: { type } },
   );
   return created.Id;
 }
@@ -247,9 +250,10 @@ async function updateCourseAttendance(
   patch: Partial<Attendance_Body>,
 ): Promise<void> {
   if (IS_DEV) return mockStore.updateCourseAttendance(id, patch);
+  const type = await getListItemType(COURSE_ATTENDANCE_LIST);
   await spUpdate(`/lists/getbytitle('${COURSE_ATTENDANCE_LIST}')/items(${id})`, {
     ...patch,
-    __metadata: { type: "SP.Data.INDIVIDUAL_COURSE_ATTENDANCEListItem" },
+    __metadata: { type },
   });
 }
 
@@ -271,9 +275,10 @@ async function getProgression(): Promise<ProgressionListItem[]> {
 
 async function createProgression(data: Progression_Body): Promise<number> {
   if (IS_DEV) return mockStore.createProgression(data);
+  const type = await getListItemType(PROGRESSION_LIST);
   const created = await spPost<{ Id: number }>(
     `/lists/getbytitle('${PROGRESSION_LIST}')/items`,
-    { ...data, __metadata: { type: "SP.Data.INDIVIDUAL_PROGRESSIONListItem" } },
+    { ...data, __metadata: { type } },
   );
   return created.Id;
 }
@@ -283,9 +288,10 @@ async function updateProgression(
   patch: Partial<Progression_Body>,
 ): Promise<void> {
   if (IS_DEV) return mockStore.updateProgression(id, patch);
+  const type = await getListItemType(PROGRESSION_LIST);
   await spUpdate(`/lists/getbytitle('${PROGRESSION_LIST}')/items(${id})`, {
     ...patch,
-    __metadata: { type: "SP.Data.INDIVIDUAL_PROGRESSIONListItem" },
+    __metadata: { type },
   });
 }
 

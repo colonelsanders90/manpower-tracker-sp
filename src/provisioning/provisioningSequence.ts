@@ -32,7 +32,7 @@ import {
 } from "@/lib/jsom";
 import { applyPermissions } from "./applyPermissions";
 import { log } from "@/lib/diagnosticLog";
-import { spGetAll, spPost } from "@/lib/sharepoint";
+import { spGetAll, spPost, getListItemType } from "@/lib/sharepoint";
 import { UNITS_LIST } from "@/types/units";
 import { ROLES_LIST } from "@/types/roles";
 import { INDIVIDUALS_LIST } from "@/types/individuals";
@@ -274,9 +274,12 @@ export const V2_MIGRATIONS: { name: string; run: () => Promise<void> }[] = [
       );
       if (existing.length > 0) return; // already seeded; do nothing
 
+      // SP encodes `_` in list titles as `_x005f_` in EntityType; fetch the
+      // real ListItemEntityTypeFullName instead of building it from the title.
+      const entityType = await getListItemType(ROA_COURSES_LIST);
       for (const c of ROA_COURSE_SEED) {
         await spPost(`/lists/getbytitle('${ROA_COURSES_LIST}')/items`, {
-          __metadata: { type: "SP.Data.ROA_COURSESListItem" },
+          __metadata: { type: entityType },
           Title: c.Title,
           Label: c.Label,
           Profiles: { results: c.Profiles },
