@@ -73,18 +73,18 @@ export const ROA_STATUSES: RoaStatus[] = [
 export const STATUS_FILL: Record<RoaStatus, string> = {
   Completed: "#92D050",
   Planned: "#FFC000",
-  NotPlanned: "#E24B4A",
+  NotPlanned: "#FBE0DD", // soft blush — saturated red + white was harsh
   NotApplicable: "#DEDCD8",
 };
 
 /**
- * Text colour to use against the corresponding fill — picked for legibility.
- * Cells with red fill get white text; the others get near-black.
+ * Text colour to use against the corresponding fill — picked for legibility
+ * without harsh bright-white-on-saturated-dark.
  */
 export const STATUS_TEXT: Record<RoaStatus, string> = {
   Completed: "#085041", // dark green
   Planned: "#633806", // dark amber
-  NotPlanned: "#FFFFFF",
+  NotPlanned: "#7A1F1A", // deep maroon — readable on the soft blush
   NotApplicable: "#5F5E5A", // muted grey
 };
 
