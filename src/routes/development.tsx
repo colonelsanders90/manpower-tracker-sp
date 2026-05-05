@@ -140,6 +140,29 @@ export function DevelopmentPage() {
     return rows.filter((r) => r.profile === activeFilter);
   }, [rows, activeFilter]);
 
+  // Build the edit-dialog payload — must be hoisted ABOVE the early returns
+  // so the hooks order stays stable across loading/loaded renders.
+  const editingPayload: ProgressionEdit | null = useMemo(() => {
+    if (editingId == null) return null;
+    const row = rows.find((r) => r.id === editingId);
+    if (!row) return null;
+    const myAtt = (attendance.data ?? []).filter((a) => a.IndividualId === row.id);
+    const myProg = (progression.data ?? []).find((p) => p.IndividualId === row.id);
+    return {
+      individualId: row.id,
+      individualName: row.name,
+      profile: row.profile,
+      mascLevel: myProg?.MASCLevel ?? null,
+      dateOfExpertise: myProg?.DateOfExpertise ?? null,
+      emfRemarks: myProg?.EMFRemarks ?? null,
+      track: myProg?.Track ?? null,
+      rLevel: myProg?.RLevel ?? null,
+      rLevelRemarks: myProg?.RLevelRemarks ?? null,
+      coursesRemarks: myProg?.CoursesRemarks ?? null,
+      attendance: myAtt,
+    };
+  }, [editingId, rows, attendance.data, progression.data]);
+
   if (
     individuals.isLoading ||
     courses.isLoading ||
@@ -338,27 +361,6 @@ export function DevelopmentPage() {
         ]
       : []),
   ];
-
-  // Build the edit payload for the dialog (must include attendance + progression)
-  const editingRow = editingId != null ? rows.find((r) => r.id === editingId) : null;
-  const editingPayload: ProgressionEdit | null = useMemo(() => {
-    if (!editingRow || !attendance.data || !progression.data) return null;
-    const myAtt = attendance.data.filter((a) => a.IndividualId === editingRow.id);
-    const myProg = progression.data.find((p) => p.IndividualId === editingRow.id);
-    return {
-      individualId: editingRow.id,
-      individualName: editingRow.name,
-      profile: editingRow.profile,
-      mascLevel: myProg?.MASCLevel ?? null,
-      dateOfExpertise: myProg?.DateOfExpertise ?? null,
-      emfRemarks: myProg?.EMFRemarks ?? null,
-      track: myProg?.Track ?? null,
-      rLevel: myProg?.RLevel ?? null,
-      rLevelRemarks: myProg?.RLevelRemarks ?? null,
-      coursesRemarks: myProg?.CoursesRemarks ?? null,
-      attendance: myAtt,
-    };
-  }, [editingRow, attendance.data, progression.data]);
 
   const FILTERS: { key: FilterKey; label: string }[] = [
     { key: "all", label: "All" },
