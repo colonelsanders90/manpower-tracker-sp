@@ -14,19 +14,22 @@ export const MONO = '"Geist Mono", monospace';
 // Reusable DataGrid sx — currently identical across the 4 list pages.
 // Imported as `sx={DATAGRID_SX}` on every DataGrid in the routes folder.
 //
-// Notes (after user feedback "tables are hard to read", then "white text
-// hurts my eyes"):
-//   - Header text uses STONE (#DEDCD8) instead of pure white. Reads cleanly
-//     against the navy chrome without the harsh bright-white-on-saturated-dark
-//     fatigue. Same effect as off-white text in serious dashboards.
-//   - Outer + cell borders bumped to 18% / 12% so rows separate clearly.
-//   - Faint zebra stripe + navy-tinted hover for scanning.
+// History (user feedback over multiple iterations):
+//   1. "tables are hard to read"     → bumped border opacity, added zebra
+//   2. "white text hurts my eyes"    → header text from #FFF → STONE (#DEDCD8)
+//   3. "MuiDataGrid-columnHeaderTitle still hurts" — STONE is only ~14%
+//      darker than pure white; on saturated navy that's still very bright.
+//      → dropped to rgba(255,255,255,0.62) plus fontWeight 500 (was 600).
+//      Standard "secondary white" treatment for body text on dark chrome.
+const HEADER_TEXT = "rgba(255,255,255,0.62)";
+const HEADER_TEXT_HOVER = "rgba(255,255,255,0.85)";
+
 export const DATAGRID_SX = {
   bgcolor: "background.paper",
   border: "1px solid rgba(0,0,0,0.18)",
   "& .MuiDataGrid-columnHeaders": {
     bgcolor: NAVY,
-    color: STONE,
+    color: HEADER_TEXT,
     borderRadius: 0,
     fontFamily: MONO,
     textTransform: "uppercase",
@@ -34,14 +37,17 @@ export const DATAGRID_SX = {
     letterSpacing: "0.04em",
   },
   "& .MuiDataGrid-columnHeaderTitle": {
-    color: STONE,
-    fontWeight: 600,
+    color: HEADER_TEXT,
+    fontWeight: 500,
+  },
+  "& .MuiDataGrid-columnHeader:hover .MuiDataGrid-columnHeaderTitle": {
+    color: HEADER_TEXT_HOVER,
   },
   "& .MuiDataGrid-iconSeparator, & .MuiDataGrid-sortIcon, & .MuiDataGrid-menuIconButton": {
-    color: STONE,
+    color: HEADER_TEXT,
   },
   "& .MuiDataGrid-columnHeader": {
-    borderRight: "1px solid rgba(222,220,216,0.18)",
+    borderRight: "1px solid rgba(255,255,255,0.10)",
   },
   "& .MuiDataGrid-cell": {
     alignItems: "flex-start",
