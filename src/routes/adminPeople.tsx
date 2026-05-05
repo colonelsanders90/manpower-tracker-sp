@@ -21,7 +21,7 @@ import { IndividualFormDialog } from "@/components/dialogs/IndividualFormDialog"
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 
-const NAVY = "#01219C";
+import { MONO, DATAGRID_SX } from "@/lib/tokens";
 
 type Row = {
   id: number;
@@ -100,7 +100,7 @@ export function AdminPeoplePage() {
               component="span"
               sx={{
                 ml: 1,
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}
@@ -122,7 +122,7 @@ export function AdminPeoplePage() {
       renderCell: (p) => (
         <Box
           sx={{
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             fontSize: 11,
             color: "text.secondary",
           }}
@@ -137,7 +137,7 @@ export function AdminPeoplePage() {
       width: 100,
       type: "number",
       renderCell: (p) => (
-        <Box sx={{ fontFamily: '"Geist Mono", monospace', fontVariantNumeric: "tabular-nums" }}>
+        <Box sx={{ fontFamily: MONO, fontVariantNumeric: "tabular-nums" }}>
           {p.row.postingCount}
         </Box>
       ),
@@ -206,19 +206,7 @@ export function AdminPeoplePage() {
           initialState={{
             sorting: { sortModel: [{ field: "name", sort: "asc" }] },
           }}
-          sx={{
-            bgcolor: "background.paper",
-            borderColor: "rgba(0,0,0,0.08)",
-            "& .MuiDataGrid-columnHeaders": {
-              bgcolor: NAVY,
-              color: "white",
-              borderRadius: 0,
-              fontFamily: '"Geist Mono", monospace',
-              textTransform: "uppercase",
-              fontSize: 11,
-              letterSpacing: "0.04em",
-            },
-          }}
+          sx={DATAGRID_SX}
         />
       </Box>
 

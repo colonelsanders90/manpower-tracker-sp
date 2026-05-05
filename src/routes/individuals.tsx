@@ -8,9 +8,8 @@ import { useRoles } from "@/hooks/useRoles";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import { formatName } from "@/lib/formatters";
+import { NAVY, MONO, DATAGRID_SX } from "@/lib/tokens";
 import type { PostingListItem } from "@/types/postings";
-
-const NAVY = "#01219C";
 
 type FilterKey = "planned" | "candidate" | "all";
 
@@ -114,7 +113,7 @@ export function IndividualsPage() {
               component="span"
               sx={{
                 ml: 1,
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}
@@ -191,7 +190,7 @@ export function IndividualsPage() {
                 {p.StartDate && (
                   <Box
                     sx={{
-                      fontFamily: '"Geist Mono", monospace',
+                      fontFamily: MONO,
                       fontSize: 10,
                       color: "text.secondary",
                     }}
@@ -233,7 +232,7 @@ export function IndividualsPage() {
             }
             variant={activeFilter === f.key ? "filled" : "outlined"}
             sx={{
-              fontFamily: '"Geist Mono", monospace',
+              fontFamily: MONO,
               fontSize: 11,
               letterSpacing: "0.04em",
               ...(activeFilter === f.key && {
@@ -256,24 +255,7 @@ export function IndividualsPage() {
           initialState={{
             sorting: { sortModel: [{ field: "name", sort: "asc" }] },
           }}
-          sx={{
-            bgcolor: "background.paper",
-            borderColor: "rgba(0,0,0,0.08)",
-            "& .MuiDataGrid-columnHeaders": {
-              bgcolor: NAVY,
-              color: "white",
-              borderRadius: 0,
-              fontFamily: '"Geist Mono", monospace',
-              textTransform: "uppercase",
-              fontSize: 11,
-              letterSpacing: "0.04em",
-            },
-            "& .MuiDataGrid-cell": {
-              alignItems: "flex-start",
-              py: 1.25,
-              fontSize: 14,
-            },
-          }}
+          sx={DATAGRID_SX}
         />
       </Box>
     </Stack>

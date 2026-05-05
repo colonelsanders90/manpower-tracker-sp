@@ -15,8 +15,7 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 
-const NAVY = "#01219C";
-const CORAL = "#F9866B";
+import { NAVY, CORAL, MONO, DATAGRID_SX } from "@/lib/tokens";
 
 type FilterKey =
   | "movement"
@@ -128,7 +127,7 @@ export function RolesPage() {
             </Link>
             <Box
               sx={{
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}
@@ -138,7 +137,7 @@ export function RolesPage() {
             {est && (
               <Box
                 sx={{
-                  fontFamily: '"Geist Mono", monospace',
+                  fontFamily: MONO,
                   fontSize: 10,
                   px: 0.75, py: 0.25,
                   borderRadius: 0.5,
@@ -224,7 +223,7 @@ export function RolesPage() {
               label={
                 <Box
                   sx={{
-                    fontFamily: '"Geist Mono", monospace',
+                    fontFamily: MONO,
                     fontSize: 11,
                   }}
                 >
@@ -267,24 +266,7 @@ export function RolesPage() {
           initialState={{
             sorting: { sortModel: [{ field: "Signal", sort: "asc" }] },
           }}
-          sx={{
-            bgcolor: "background.paper",
-            borderColor: "rgba(0,0,0,0.08)",
-            "& .MuiDataGrid-columnHeaders": {
-              bgcolor: NAVY,
-              color: "white",
-              borderRadius: 0,
-              fontFamily: '"Geist Mono", monospace',
-              textTransform: "uppercase",
-              fontSize: 11,
-              letterSpacing: "0.04em",
-            },
-            "& .MuiDataGrid-cell": {
-              alignItems: "flex-start",
-              py: 1.25,
-              fontSize: 14,
-            },
-          }}
+          sx={DATAGRID_SX}
         />
       </Box>
     </Stack>
@@ -358,7 +340,7 @@ function OutCell({ row }: { row: RoleMovementRow }) {
       {c.EndDate && (
         <Box
           sx={{
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             fontSize: 10,
             color: "text.secondary",
             mt: 0.25,
@@ -401,7 +383,7 @@ function InCell({ row }: { row: RoleMovementRow }) {
           {p.StartDate && (
             <Box
               sx={{
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}
@@ -414,7 +396,7 @@ function InCell({ row }: { row: RoleMovementRow }) {
       {rest > 0 && (
         <Box
           sx={{
-            fontFamily: '"Geist Mono", monospace',
+            fontFamily: MONO,
             fontSize: 10,
             color: "text.secondary",
           }}

@@ -27,7 +27,7 @@ import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 import { formatName } from "@/lib/formatters";
 import type { PostingStatus } from "@/types/postings";
 
-const NAVY = "#01219C";
+import { MONO, DATAGRID_SX } from "@/lib/tokens";
 
 type Row = {
   id: number;
@@ -143,7 +143,7 @@ export function AdminPostingsPage() {
               component="span"
               sx={{
                 ml: 1,
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}
@@ -171,7 +171,7 @@ export function AdminPostingsPage() {
               component="span"
               sx={{
                 ml: 1,
-                fontFamily: '"Geist Mono", monospace',
+                fontFamily: MONO,
                 fontSize: 10,
                 color: "text.secondary",
               }}
@@ -189,7 +189,7 @@ export function AdminPostingsPage() {
       valueGetter: (_v, row) =>
         row.startDate ? new Date(row.startDate).getTime() : null,
       renderCell: (p) => (
-        <Box sx={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, color: "text.secondary" }}>
+        <Box sx={{ fontFamily: MONO, fontSize: 11, color: "text.secondary" }}>
           {p.row.startDate ?? "—"}
         </Box>
       ),
@@ -201,7 +201,7 @@ export function AdminPostingsPage() {
       valueGetter: (_v, row) =>
         row.endDate ? new Date(row.endDate).getTime() : null,
       renderCell: (p) => (
-        <Box sx={{ fontFamily: '"Geist Mono", monospace', fontSize: 11, color: "text.secondary" }}>
+        <Box sx={{ fontFamily: MONO, fontSize: 11, color: "text.secondary" }}>
           {p.row.endDate ?? "—"}
         </Box>
       ),
@@ -288,19 +288,7 @@ export function AdminPostingsPage() {
           initialState={{
             sorting: { sortModel: [{ field: "status", sort: "asc" }] },
           }}
-          sx={{
-            bgcolor: "background.paper",
-            borderColor: "rgba(0,0,0,0.08)",
-            "& .MuiDataGrid-columnHeaders": {
-              bgcolor: NAVY,
-              color: "white",
-              borderRadius: 0,
-              fontFamily: '"Geist Mono", monospace',
-              textTransform: "uppercase",
-              fontSize: 11,
-              letterSpacing: "0.04em",
-            },
-          }}
+          sx={DATAGRID_SX}
         />
       </Box>
 
