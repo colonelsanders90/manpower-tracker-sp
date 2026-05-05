@@ -86,8 +86,9 @@ No data is seeded. HR enters branches and individuals through the UI.
 | Version | Date | Change |
 |---|---|---|
 | 1 | 2026-04-26 | Initial provisioning — UNITS, ROLES, INDIVIDUALS, POSTINGS. See per-list type files in `src/types/` for the v1 column shape. Lookups use `RelationshipDeleteBehavior="Restrict"` to mirror the Postgres FK guards. |
+| 2 | 2026-05-05 | Development feature. Added `Profile` Choice column to INDIVIDUALS (`MDES`/`EOS`/`DXO`, nullable). Three new lists: `ROA_COURSES` (admin-managed catalogue, Multi-Choice `Profiles`), `INDIVIDUAL_COURSE_ATTENDANCE` (one row per person × course, 4 statuses), `INDIVIDUAL_PROGRESSION` (MASC/Track/R-Level + remarks per person). Migration via re-runnable `migrateToV2()` on `/admin/provision`; existing v1 data untouched. **Package semver bumped to 2.0.0** to match the schema major. |
 
-`SCHEMA_VERSION = 1` in `src/provisioning/provisioningSequence.ts`. Bump on
+`SCHEMA_VERSION = 2` in `src/provisioning/provisioningSequence.ts`. Bump on
 any add/remove/rename of a list column.
 
 ## Reusable from the Next.js prototype
