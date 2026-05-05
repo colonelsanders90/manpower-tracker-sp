@@ -15,22 +15,25 @@ export const MONO = '"Geist Mono", monospace';
 // Imported as `sx={DATAGRID_SX}` on every DataGrid in the routes folder.
 //
 // History (user feedback over multiple iterations):
-//   1. "tables are hard to read"     → bumped border opacity, added zebra
-//   2. "white text hurts my eyes"    → header text from #FFF → STONE (#DEDCD8)
-//   3. "MuiDataGrid-columnHeaderTitle still hurts" — STONE is only ~14%
-//      darker than pure white; on saturated navy that's still very bright.
-//      → dropped to rgba(255,255,255,0.62) plus fontWeight 500 (was 600).
-//      Standard "secondary white" treatment for body text on dark chrome.
-const HEADER_TEXT = "rgba(255,255,255,0.62)";
-const HEADER_TEXT_HOVER = "rgba(255,255,255,0.85)";
+//   1. "tables are hard to read"  → bumped border opacity, added zebra
+//   2. "white text hurts my eyes" → header text from #FFF → STONE → 0.62 white
+//   3. "don't use stone, use something else, i'm dying" — abandoning the
+//      light-on-dark approach entirely. Switched to dark text on a soft
+//      neutral header (Notion / Linear / GitHub pattern). Same chrome accent
+//      retained as a 3px navy bottom border so the header still reads as
+//      brand-aligned, just without the saturated-bg eye-strain.
+const HEADER_BG = "#F1EFE8";   // warm off-white, slightly darker than paper
+const HEADER_TEXT = "#3F3D38"; // soft near-black
+const HEADER_BORDER = NAVY;
 
 export const DATAGRID_SX = {
   bgcolor: "background.paper",
   border: "1px solid rgba(0,0,0,0.18)",
   "& .MuiDataGrid-columnHeaders": {
-    bgcolor: NAVY,
+    bgcolor: HEADER_BG,
     color: HEADER_TEXT,
     borderRadius: 0,
+    borderBottom: `2px solid ${HEADER_BORDER}`,
     fontFamily: MONO,
     textTransform: "uppercase",
     fontSize: 11,
@@ -38,16 +41,13 @@ export const DATAGRID_SX = {
   },
   "& .MuiDataGrid-columnHeaderTitle": {
     color: HEADER_TEXT,
-    fontWeight: 500,
-  },
-  "& .MuiDataGrid-columnHeader:hover .MuiDataGrid-columnHeaderTitle": {
-    color: HEADER_TEXT_HOVER,
+    fontWeight: 600,
   },
   "& .MuiDataGrid-iconSeparator, & .MuiDataGrid-sortIcon, & .MuiDataGrid-menuIconButton": {
     color: HEADER_TEXT,
   },
   "& .MuiDataGrid-columnHeader": {
-    borderRight: "1px solid rgba(255,255,255,0.10)",
+    borderRight: "1px solid rgba(0,0,0,0.08)",
   },
   "& .MuiDataGrid-cell": {
     alignItems: "flex-start",
