@@ -27,7 +27,7 @@ import {
   type PostingEdit,
 } from "@/components/dialogs/PostingFormDialog";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import { formatEstablishment } from "@/lib/movement";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
 
@@ -244,8 +244,8 @@ export function RoleDetailPage() {
                         mt: 0.5,
                       }}
                     >
-                      {currentPosting.StartDate ?? "?"} →{" "}
-                      {currentPosting.EndDate ?? "ongoing"}
+                      {formatDate(currentPosting.StartDate, "?")} →{" "}
+                      {formatDate(currentPosting.EndDate, "ongoing")}
                     </Box>
                   )}
                   {currentPosting.Notes && (
@@ -363,7 +363,7 @@ export function RoleDetailPage() {
                               mt: 0.5,
                             }}
                           >
-                            {p.StartDate ?? "?"} → {p.EndDate ?? "?"}
+                            {formatDate(p.StartDate, "?")} → {formatDate(p.EndDate, "?")}
                           </Box>
                         )}
                         {p.Notes && (
@@ -447,7 +447,7 @@ export function RoleDetailPage() {
                             color: "text.secondary",
                           }}
                         >
-                          {p.StartDate} → {p.EndDate}
+                          {formatDate(p.StartDate)} → {formatDate(p.EndDate)}
                         </Box>
                       </Box>
                     </Stack>

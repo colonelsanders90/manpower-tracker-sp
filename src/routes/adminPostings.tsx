@@ -24,7 +24,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PostingFormDialog } from "@/components/dialogs/PostingFormDialog";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import type { PostingStatus } from "@/types/postings";
 
 import { MONO, DATAGRID_SX } from "@/lib/tokens";
@@ -190,7 +190,7 @@ export function AdminPostingsPage() {
         row.startDate ? new Date(row.startDate).getTime() : null,
       renderCell: (p) => (
         <Box sx={{ fontFamily: MONO, fontSize: 11, color: "text.secondary" }}>
-          {p.row.startDate ?? "—"}
+          {formatDate(p.row.startDate)}
         </Box>
       ),
     },
@@ -202,7 +202,7 @@ export function AdminPostingsPage() {
         row.endDate ? new Date(row.endDate).getTime() : null,
       renderCell: (p) => (
         <Box sx={{ fontFamily: MONO, fontSize: 11, color: "text.secondary" }}>
-          {p.row.endDate ?? "—"}
+          {formatDate(p.row.endDate)}
         </Box>
       ),
     },

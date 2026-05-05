@@ -13,7 +13,7 @@ import {
   STATUS_BAR_COLOR,
   STATUS_BAR_TEXT,
 } from "@/lib/timeline";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import { CORAL, MONO } from "@/lib/tokens";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
@@ -243,7 +243,7 @@ export function PostingTimeline({
                 sx={{ position: "relative", height: 28 }}
               >
                 <Tooltip
-                  title={`${p.Status}: ${p.StartDate ?? "?"} → ${p.EndDate ?? "?"}`}
+                  title={`${p.Status}: ${formatDate(p.StartDate, "?")} → ${formatDate(p.EndDate, "?")}`}
                   placement="top"
                 >
                   <Box
@@ -367,7 +367,7 @@ function OutOfWindowList({
                 color: "text.secondary",
               }}
             >
-              {p.StartDate ?? "?"} → {p.EndDate ?? "?"}
+              {formatDate(p.StartDate, "?")} → {formatDate(p.EndDate, "?")}
             </Box>
           </Stack>
         );

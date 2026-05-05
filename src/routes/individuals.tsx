@@ -7,7 +7,7 @@ import { usePostings } from "@/hooks/usePostings";
 import { useRoles } from "@/hooks/useRoles";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import { NAVY, MONO, DATAGRID_SX } from "@/lib/tokens";
 import type { PostingListItem } from "@/types/postings";
 
@@ -195,7 +195,7 @@ export function IndividualsPage() {
                       color: "text.secondary",
                     }}
                   >
-                    {p.StartDate}
+                    {formatDate(p.StartDate)}
                   </Box>
                 )}
               </Stack>

@@ -40,7 +40,7 @@ import {
   type Profile,
   type RoaStatus,
 } from "@/lib/progression";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import { NAVY, MONO, DATAGRID_SX } from "@/lib/tokens";
 import { ProgressionFormDialog, type ProgressionEdit } from "@/components/dialogs/ProgressionFormDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
@@ -224,7 +224,7 @@ export function DevelopmentPage() {
       const fill = STATUS_FILL[cell.status];
       const txt = STATUS_TEXT[cell.status];
       return (
-        <Tooltip title={`${cell.status}${cell.date ? ` · ${cell.date}` : ""} — ${c.Label}`}>
+        <Tooltip title={`${cell.status}${cell.date ? ` · ${formatDate(cell.date)}` : ""} — ${c.Label}`}>
           <Box
             sx={{
               bgcolor: fill,
@@ -245,7 +245,7 @@ export function DevelopmentPage() {
             }}
           >
             <Box>{STATUS_LABEL[cell.status]}</Box>
-            {cell.date && <Box sx={{ fontSize: 9, opacity: 0.85 }}>{cell.date}</Box>}
+            {cell.date && <Box sx={{ fontSize: 9, opacity: 0.85 }}>{formatDate(cell.date)}</Box>}
           </Box>
         </Tooltip>
       );

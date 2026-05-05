@@ -14,6 +14,7 @@ import {
 } from "@/lib/movement";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
+import { formatDate } from "@/lib/formatters";
 
 import { NAVY, CORAL, MONO, DATAGRID_SX } from "@/lib/tokens";
 
@@ -346,7 +347,7 @@ function OutCell({ row }: { row: RoleMovementRow }) {
             mt: 0.25,
           }}
         >
-          ends {c.EndDate}
+          ends {formatDate(c.EndDate)}
         </Box>
       )}
     </Box>
@@ -388,7 +389,7 @@ function InCell({ row }: { row: RoleMovementRow }) {
                 color: "text.secondary",
               }}
             >
-              {p.StartDate}
+              {formatDate(p.StartDate)}
             </Box>
           )}
         </Stack>

@@ -7,7 +7,7 @@
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 import { StatusBadge } from "../shared/StatusBadge";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import { NAVY } from "@/lib/tokens";
 import type { PostingListItem } from "@/types/postings";
 import type { RoleListItem } from "@/types/roles";
@@ -33,14 +33,9 @@ type Row = {
   unitName: string;
 };
 
-function formatShortDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+// (Date formatting now lives in @/lib/formatters as formatDate — re-exported
+// here as formatShortDate to keep the local call sites unchanged.)
+const formatShortDate = (iso: string): string => formatDate(iso, "");
 
 export function UpcomingMovements({ postings, roles, individuals }: Props) {
   const today = new Date();

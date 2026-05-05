@@ -33,7 +33,7 @@ import {
 import { ProgressionFormDialog } from "@/components/dialogs/ProgressionFormDialog";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { LoadingBlock, ErrorBlock, PageHeader } from "./_shared";
-import { formatName } from "@/lib/formatters";
+import { formatName, formatDate } from "@/lib/formatters";
 import {
   STATUS_FILL,
   STATUS_TEXT,
@@ -262,8 +262,8 @@ export function IndividualDetailPage() {
                         mt: 0.5,
                       }}
                     >
-                      {current.StartDate ?? "?"} →{" "}
-                      {current.EndDate ?? "ongoing"}
+                      {formatDate(current.StartDate, "?")} →{" "}
+                      {formatDate(current.EndDate, "ongoing")}
                     </Box>
                   )}
                   {current.Notes && (
@@ -386,7 +386,7 @@ export function IndividualDetailPage() {
                               mt: 0.5,
                             }}
                           >
-                            {p.StartDate ?? "?"} → {p.EndDate ?? "?"}
+                            {formatDate(p.StartDate, "?")} → {formatDate(p.EndDate, "?")}
                           </Box>
                         )}
                         {p.Notes && (
@@ -480,7 +480,7 @@ export function IndividualDetailPage() {
                             color: "text.secondary",
                           }}
                         >
-                          {p.StartDate} → {p.EndDate}
+                          {formatDate(p.StartDate)} → {formatDate(p.EndDate)}
                         </Box>
                       </Box>
                     </Stack>
@@ -659,7 +659,7 @@ function DevelopmentSnapshot({
                   <Typography
                     sx={{ fontFamily: MONO, fontSize: 10, color: "text.secondary" }}
                   >
-                    {myProgression.DateOfExpertise}
+                    {formatDate(myProgression.DateOfExpertise)}
                   </Typography>
                 )}
               </Box>
@@ -697,7 +697,7 @@ function DevelopmentSnapshot({
                   return (
                     <Tooltip
                       key={c.Id}
-                      title={`${c.Label}${att?.Date ? ` · ${att.Date}` : ""}`}
+                      title={`${c.Label}${att?.Date ? ` · ${formatDate(att.Date)}` : ""}`}
                     >
                       <Box
                         sx={{
@@ -716,7 +716,7 @@ function DevelopmentSnapshot({
                       >
                         <Box>{c.Title}</Box>
                         <Box sx={{ fontSize: 9, opacity: 0.85 }}>
-                          {att?.Date ?? STATUS_LABEL[status]}
+                          {att?.Date ? formatDate(att.Date) : STATUS_LABEL[status]}
                         </Box>
                       </Box>
                     </Tooltip>
