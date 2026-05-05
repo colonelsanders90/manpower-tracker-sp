@@ -14,8 +14,8 @@
 import { useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Chip,
-  IconButton,
   Stack,
   Tooltip,
   Typography,
@@ -348,14 +348,18 @@ export function DevelopmentPage() {
           {
             field: "actions",
             headerName: "",
-            width: 60,
+            width: 100,
             sortable: false,
             renderCell: (params) => (
-              <Tooltip title="Edit progression">
-                <IconButton size="small" onClick={() => setEditingId(params.row.id)}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<EditIcon fontSize="small" />}
+                onClick={() => setEditingId(params.row.id)}
+                sx={{ minWidth: 0, fontSize: 11, py: 0.25 }}
+              >
+                Edit
+              </Button>
             ),
           } as GridColDef<Row>,
         ]

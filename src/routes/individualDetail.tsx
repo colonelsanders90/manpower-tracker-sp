@@ -188,6 +188,16 @@ export function IndividualDetailPage() {
         }
       />
 
+      {/* ── Development snapshot ─ profile, MASC, R-Level, ROA courses ── */}
+      <DevelopmentSnapshot
+        ind={ind}
+        myAttendance={(attendance.data ?? []).filter((a) => a.IndividualId === individualId)}
+        myProgression={(progression.data ?? []).find((p) => p.IndividualId === individualId)}
+        allCourses={roaCourses.data ?? []}
+        isAdmin={isAdmin}
+        onEdit={() => setProgOpen(true)}
+      />
+
       <Box
         sx={{
           display: "grid",
@@ -516,16 +526,6 @@ export function IndividualDetailPage() {
         </Paper>
       </Box>
 
-      {/* ── Development snapshot (baseball card) ───────────────────────── */}
-      <DevelopmentSnapshot
-        ind={ind}
-        myAttendance={(attendance.data ?? []).filter((a) => a.IndividualId === individualId)}
-        myProgression={(progression.data ?? []).find((p) => p.IndividualId === individualId)}
-        allCourses={roaCourses.data ?? []}
-        isAdmin={isAdmin}
-        onEdit={() => setProgOpen(true)}
-      />
-
       {/* Dialogs */}
       {isAdmin && (
         <PostingFormDialog
@@ -626,11 +626,14 @@ function DevelopmentSnapshot({
           )}
         </Stack>
         {isAdmin && (
-          <Tooltip title="Edit progression">
-            <IconButton size="small" onClick={onEdit}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<EditIcon fontSize="small" />}
+            onClick={onEdit}
+          >
+            Edit progression
+          </Button>
         )}
       </Stack>
 

@@ -13,9 +13,15 @@ export const MONO = '"Geist Mono", monospace';
 
 // Reusable DataGrid sx — currently identical across the 4 list pages.
 // Imported as `sx={DATAGRID_SX}` on every DataGrid in the routes folder.
+//
+// Contrast notes (after user feedback "tables are hard to read"):
+//   - outer + cell borders bumped from 8% → 18% so rows separate clearly
+//   - zebra striping on odd rows (very subtle stone tint)
+//   - hover background to make row scanning easier
+//   - bolder cell text on the primary text colour
 export const DATAGRID_SX = {
   bgcolor: "background.paper",
-  borderColor: "rgba(0,0,0,0.08)",
+  border: "1px solid rgba(0,0,0,0.18)",
   "& .MuiDataGrid-columnHeaders": {
     bgcolor: NAVY,
     color: "white",
@@ -25,9 +31,25 @@ export const DATAGRID_SX = {
     fontSize: 11,
     letterSpacing: "0.04em",
   },
+  "& .MuiDataGrid-columnHeader": {
+    borderRight: "1px solid rgba(255,255,255,0.18)",
+  },
   "& .MuiDataGrid-cell": {
     alignItems: "flex-start",
     py: 1.25,
     fontSize: 14,
+    color: "text.primary",
+    borderColor: "rgba(0,0,0,0.12)",
+  },
+  "& .MuiDataGrid-row": {
+    "&:nth-of-type(odd)": {
+      bgcolor: "rgba(0,0,0,0.018)", // very faint zebra
+    },
+    "&:hover": {
+      bgcolor: "rgba(1,33,156,0.06) !important", // navy-tinted hover
+    },
+  },
+  "& .MuiDataGrid-footerContainer": {
+    borderTop: "1px solid rgba(0,0,0,0.18)",
   },
 } as const;
