@@ -227,7 +227,11 @@ function UnitTreeView(props: UnitTreeProps) {
             sx={{
               display: "grid",
               gap: 2,
-              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+              // auto-fill + 260px min so the row genuinely scales:
+              //   ~1080px window  → 3 cards
+              //   ~1400px window  → 4 cards
+              //   ~1720px window  → 5 cards, etc.
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
             }}
           >
             {children.map((child) => (

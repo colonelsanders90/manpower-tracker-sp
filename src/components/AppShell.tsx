@@ -264,8 +264,11 @@ export function AppShell() {
             flex: 1,
             px: { xs: 2, md: 4 },
             py: { xs: 3, md: 4 },
-            maxWidth: 1280,
+            // No maxWidth cap — pages grow with the window. Pages that prefer
+            // a bounded reading width can wrap their own content in a Box
+            // with maxWidth set per-route.
             width: "100%",
+            minWidth: 0, // let flex children shrink correctly
           }}
         >
           <Outlet />
