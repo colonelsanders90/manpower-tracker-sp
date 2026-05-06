@@ -134,13 +134,10 @@ export function DashboardPage() {
           }}
         >
           <FilledRolesDonut filled={filled} total={internalRoles.length} />
-          <Box
-            sx={{
-              display: "grid",
-              gap: 2,
-              gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
-            }}
-          >
+          {/* Outgoing + Incoming stacked full-width — much more breathable
+              than the previous side-by-side layout. Donut stays in its own
+              column so it doesn't compete for horizontal space. */}
+          <Stack spacing={2}>
             <UpcomingMovements
               direction="out"
               postings={p}
@@ -153,7 +150,7 @@ export function DashboardPage() {
               roles={r}
               individuals={i}
             />
-          </Box>
+          </Stack>
         </Box>
       </Box>
     </Stack>
