@@ -1,8 +1,14 @@
-// "Upcoming movements" panel for the dashboard.
+// Outgoing / Incoming movements panel for the dashboard.
 //
-// Filters Planned / Candidate postings to those whose StartDate falls in the
-// next 90 days, sorts by date ascending, renders as a compact stream of
-// "<date> · <person> → <role · branch>" rows.
+// Filters Planned/Candidate postings whose StartDate is within the next 90
+// days, by direction:
+//   - "out" → RAiDer (Individual.IsExternal=false) moving to an external role
+//             (Role.IsExternal=true). i.e. someone leaving RAiD.
+//   - "in"  → External individual (Individual.IsExternal=true) moving into a
+//             RAiD role (Role.IsExternal=false). i.e. someone coming in.
+//
+// Internal moves (RAiDer → RAiD role) are NOT shown — those are normal tour
+// rotations, surfaced on the Roles page instead.
 
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
@@ -15,7 +21,10 @@ import type { IndividualListItem } from "@/types/individuals";
 
 const WINDOW_DAYS = 90;
 
+export type MovementDirection = "out" | "in";
+
 type Props = {
+  direction: MovementDirection;
   postings: PostingListItem[];
   roles: RoleListItem[];
   individuals: IndividualListItem[];
@@ -33,11 +42,22 @@ type Row = {
   unitName: string;
 };
 
-// (Date formatting now lives in @/lib/formatters as formatDate — re-exported
-// here as formatShortDate to keep the local call sites unchanged.)
-const formatShortDate = (iso: string): string => formatDate(iso, "");
+const TITLE: Record<MovementDirection, string> = {
+  out: "Outgoing — leaving RAiD",
+  in: "Incoming — joining RAiD",
+};
 
-export function UpcomingMovements({ postings, roles, individuals }: Props) {
+const EMPTY: Record<MovementDirection, string> = {
+  out: "Nobody planned to leave RAiD in the next quarter.",
+  in: "Nobody planned to join RAiD in the next quarter.",
+};
+
+export function UpcomingMovements({
+  direction,
+  postings,
+  roles,
+  individuals,
+}: Props) {
   const today = new Date();
   const cutoff = new Date(today);
   cutoff.setDate(cutoff.getDate() + WINDOW_DAYS);
@@ -46,13 +66,24 @@ export function UpcomingMovements({ postings, roles, individuals }: Props) {
   const roleById = new Map(roles.map((r) => [r.Id, r]));
 
   const rows: Row[] = postings
-    .filter(
-      (p) =>
-        (p.Status === "Planned" || p.Status === "Candidate") &&
-        p.StartDate &&
-        new Date(p.StartDate) >= today &&
-        new Date(p.StartDate) <= cutoff,
-    )
+    .filter((p) => {
+      if (p.Status !== "Planned" && p.Status !== "Candidate") return false;
+      if (!p.StartDate) return false;
+      const start = new Date(p.StartDate);
+      if (start < today || start > cutoff) return false;
+
+      const ind = indById.get(p.IndividualId);
+      const role = roleById.get(p.RoleId);
+      if (!ind || !role) return false;
+
+      // Direction filter
+      if (direction === "out") {
+        // RAiDer → external role
+        return ind.IsExternal === false && role.IsExternal === true;
+      }
+      // direction === "in" — external individual → RAiD role
+      return ind.IsExternal === true && role.IsExternal === false;
+    })
     .map((p): Row | null => {
       const ind = indById.get(p.IndividualId);
       const role = roleById.get(p.RoleId);
@@ -78,7 +109,7 @@ export function UpcomingMovements({ postings, roles, individuals }: Props) {
   return (
     <Paper sx={{ p: 3, height: "100%" }}>
       <Stack direction="row" alignItems="baseline" justifyContent="space-between">
-        <Typography variant="caption">Upcoming movements</Typography>
+        <Typography variant="caption">{TITLE[direction]}</Typography>
         <Typography
           variant="caption"
           sx={{ color: "text.secondary", textTransform: "none", letterSpacing: 0 }}
@@ -97,7 +128,7 @@ export function UpcomingMovements({ postings, roles, individuals }: Props) {
             fontStyle: "italic",
           }}
         >
-          No planned or candidate moves in the next quarter.
+          {EMPTY[direction]}
         </Box>
       ) : (
         <Stack
@@ -140,7 +171,7 @@ function UpcomingRow({ row }: { row: Row }) {
           minWidth: 92,
         }}
       >
-        {formatShortDate(row.startDate)}
+        {formatDate(row.startDate, "")}
       </Box>
       <Box>
         <StatusBadge status={row.status} />

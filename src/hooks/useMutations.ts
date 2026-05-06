@@ -29,7 +29,7 @@ import { ROA_COURSES_KEY } from "./useRoaCourses";
 import { COURSE_ATTENDANCE_KEY } from "./useCourseAttendance";
 import { PROGRESSION_KEY } from "./useProgression";
 import type { Profile, RoaStatus, CompetencyTrack, RLevel } from "@/lib/progression";
-import { formatName } from "@/lib/formatters";
+import { formatName, dateInputToISO } from "@/lib/formatters";
 
 function useInvalidate() {
   const qc = useQueryClient();
@@ -401,7 +401,7 @@ export function useCreatePosting() {
         for (const p of toDemote) {
           await dataAccess.updatePosting(p.Id, {
             Status: "Past",
-            EndDate: handoffDate,
+            EndDate: dateInputToISO(handoffDate),
           });
         }
       }
@@ -420,10 +420,33 @@ export function useCreatePosting() {
         IndividualId: individualId,
         RoleId: roleId,
         Status: input.status,
-        StartDate: input.startDate,
-        EndDate: endDate,
+        StartDate: dateInputToISO(input.startDate),
+        EndDate: dateInputToISO(endDate),
         Notes: input.notes?.trim() || null,
       });
+
+      // Invariant 5 (new): when adding a Planned/Candidate posting for this
+      // individual, snap their existing Current posting's EndDate to the new
+      // posting's StartDate so the timeline shows when they're moving on.
+      // (Doesn't change Status — that's still Current until the date actually
+      // passes; admin promotes it to Current later via the regular flow.)
+      if (
+        (input.status === "Planned" || input.status === "Candidate") &&
+        input.startDate
+      ) {
+        const allPostings = await dataAccess.getPostings();
+        const myCurrent = allPostings.find(
+          (p) => p.IndividualId === individualId && p.Status === "Current",
+        );
+        if (myCurrent) {
+          const currentEnd = myCurrent.EndDate?.slice(0, 10) ?? null;
+          if (!currentEnd || currentEnd > input.startDate) {
+            await dataAccess.updatePosting(myCurrent.Id, {
+              EndDate: dateInputToISO(input.startDate),
+            });
+          }
+        }
+      }
 
       // Invariant 4: re-derive isVacant
       const postings = await dataAccess.getPostings();
@@ -472,15 +495,15 @@ export function useUpdatePosting() {
         for (const p of toDemote) {
           await dataAccess.updatePosting(p.Id, {
             Status: "Past",
-            EndDate: handoffDate,
+            EndDate: dateInputToISO(handoffDate),
           });
         }
       }
 
       await dataAccess.updatePosting(input.id, {
         Status: input.status,
-        StartDate: input.startDate,
-        EndDate: endDate,
+        StartDate: dateInputToISO(input.startDate),
+        EndDate: dateInputToISO(endDate),
         Notes: input.notes?.trim() || null,
       });
 
@@ -625,7 +648,7 @@ export function useUpsertAttendance() {
       if (existing) {
         await dataAccess.updateCourseAttendance(existing.Id, {
           Status: input.status,
-          Date: input.date,
+          Date: dateInputToISO(input.date),
         });
       } else {
         await dataAccess.createCourseAttendance({
@@ -633,7 +656,7 @@ export function useUpsertAttendance() {
           IndividualId: input.individualId,
           CourseId: input.courseId,
           Status: input.status,
-          Date: input.date,
+          Date: dateInputToISO(input.date),
         });
       }
     },
@@ -681,7 +704,7 @@ export function useUpsertProgression() {
         Title: title,
         IndividualId: input.individualId,
         MASCLevel: input.mascLevel,
-        DateOfExpertise: input.dateOfExpertise,
+        DateOfExpertise: dateInputToISO(input.dateOfExpertise),
         EMFRemarks: input.emfRemarks,
         Track: input.track,
         RLevel: input.rLevel,

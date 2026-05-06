@@ -46,3 +46,28 @@ export function formatDate(
   if (!y || !m || !d || !month) return iso // unparseable — show raw
   return `${Number(d)} ${month} ${y}`
 }
+
+/**
+ * Normalise a date-input value (`<input type="date">` returns "YYYY-MM-DD")
+ * to an ISO 8601 string at noon UTC: "YYYY-MM-DDT12:00:00Z".
+ *
+ * Why noon UTC and not "YYYY-MM-DDT00:00:00Z" or the bare date:
+ *   - SP 2013's Date columns interpret bare "YYYY-MM-DD" in the server's
+ *     local timezone. If the server runs in any non-UTC zone, midnight
+ *     shifts across a day boundary when SP normalises to UTC for storage,
+ *     so a date the user typed "5 May" comes back as "4 May".
+ *   - Sending noon UTC means no ±12-hour timezone shift can cross a day
+ *     boundary. The day part survives every round trip.
+ *
+ * Pass-through behaviour:
+ *   - `null`/empty → null  (so callers can pass user-cleared inputs)
+ *   - already-ISO ("2026-05-05T...") → returned unchanged
+ *   - anything else → returned unchanged (caller decides)
+ */
+export function dateInputToISO(
+  value: string | null | undefined,
+): string | null {
+  if (!value) return null
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T12:00:00Z`
+  return value
+}

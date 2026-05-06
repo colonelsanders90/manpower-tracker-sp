@@ -134,7 +134,26 @@ export function DashboardPage() {
           }}
         >
           <FilledRolesDonut filled={filled} total={internalRoles.length} />
-          <UpcomingMovements postings={p} roles={r} individuals={i} />
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+            }}
+          >
+            <UpcomingMovements
+              direction="out"
+              postings={p}
+              roles={r}
+              individuals={i}
+            />
+            <UpcomingMovements
+              direction="in"
+              postings={p}
+              roles={r}
+              individuals={i}
+            />
+          </Box>
         </Box>
       </Box>
     </Stack>
