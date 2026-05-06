@@ -65,6 +65,17 @@ export function UpcomingMovements({
   const indById = new Map(individuals.map((i) => [i.Id, i]));
   const roleById = new Map(roles.map((r) => [r.Id, r]));
 
+  // Pre-compute who currently holds a RAiD (non-external) role. Behaviour-
+  // based filter — works whether or not Individual.IsExternal is set
+  // accurately. A Planned/Candidate is "incoming" only if the person isn't
+  // already in RAiD; "outgoing" only if they are.
+  const hasCurrentRaidRole = new Set<number>();
+  for (const p of postings) {
+    if (p.Status !== "Current") continue;
+    const role = roleById.get(p.RoleId);
+    if (role && !role.IsExternal) hasCurrentRaidRole.add(p.IndividualId);
+  }
+
   const rows: Row[] = postings
     .filter((p) => {
       if (p.Status !== "Planned" && p.Status !== "Candidate") return false;
@@ -76,13 +87,17 @@ export function UpcomingMovements({
       const role = roleById.get(p.RoleId);
       if (!ind || !role) return false;
 
-      // Direction filter
+      const inRaidNow = hasCurrentRaidRole.has(ind.Id);
+
       if (direction === "out") {
-        // RAiDer → external role
-        return ind.IsExternal === false && role.IsExternal === true;
+        // Currently in a RAiD role + planned/candidate to an external role
+        return inRaidNow && role.IsExternal === true;
       }
-      // direction === "in" — external individual → RAiD role
-      return ind.IsExternal === true && role.IsExternal === false;
+      // direction === "in" — not currently in any RAiD role + planned/
+      // candidate to a RAiD (internal) role. Catches both flagged-external
+      // people AND new tracked individuals who haven't taken up a RAiD role
+      // yet, regardless of how IsExternal happens to be set.
+      return !inRaidNow && role.IsExternal === false;
     })
     .map((p): Row | null => {
       const ind = indById.get(p.IndividualId);
