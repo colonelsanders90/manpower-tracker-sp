@@ -31,8 +31,9 @@ import {
   PROVISIONERS,
   SCHEMA_VERSION,
   V2_MIGRATIONS,
+  V3_MIGRATIONS,
   runProvisioning,
-  runMigrationV2,
+  runMigrationsToCurrent,
   readSchemaVersion,
   type ProvisioningStepResult,
 } from "@/provisioning/provisioningSequence";
@@ -63,15 +64,29 @@ export function ProvisionPage() {
   const [seedRunning, setSeedRunning] = useState(false);
   const [seedDone, setSeedDone] = useState(false);
 
-  // ── v2 migration state ─────────────────────────────────────────────────────
+  // ── Schema migration state ────────────────────────────────────────────────
   // currentSchema null = unread / loading; number = the version stored in the
   // SP web property (1 if no marker exists, meaning we have the v1 lists only).
   const [currentSchema, setCurrentSchema] = useState<number | null>(null);
-  const [migrationSteps, setMigrationSteps] = useState<StepUi[]>(() =>
-    V2_MIGRATIONS.map((m) => ({ name: m.name, state: "pending" as StepState })),
-  );
+  // The pending steps depend on currentSchema — see derive below. We init
+  // empty and recompute when currentSchema arrives.
+  const [migrationSteps, setMigrationSteps] = useState<StepUi[]>([]);
   const [migrationRunning, setMigrationRunning] = useState(false);
   const [migrationDone, setMigrationDone] = useState(false);
+
+  // Derive the list of pending migration steps from currentSchema. Re-run
+  // whenever currentSchema changes (e.g. after a successful migration).
+  useEffect(() => {
+    if (currentSchema == null) return;
+    const steps: StepUi[] = [];
+    if (currentSchema < 2) {
+      steps.push(...V2_MIGRATIONS.map((m) => ({ name: m.name, state: "pending" as StepState })));
+    }
+    if (currentSchema < 3) {
+      steps.push(...V3_MIGRATIONS.map((m) => ({ name: m.name, state: "pending" as StepState })));
+    }
+    setMigrationSteps(steps);
+  }, [currentSchema]);
 
   // Load JSOM scripts lazily — they must NOT be in index.html because
   // MicrosoftAjax.js patches prototypes before React boots. Loading here
@@ -233,7 +248,7 @@ export function ProvisionPage() {
       prev.map((s, idx) => (idx === 0 ? { ...s, state: "running" } : s)),
     );
 
-    await runMigrationV2(handleProgress);
+    await runMigrationsToCurrent(currentSchema ?? 1, handleProgress);
     setMigrationRunning(false);
     setMigrationDone(true);
 

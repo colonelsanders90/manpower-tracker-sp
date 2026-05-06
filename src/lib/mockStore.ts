@@ -125,23 +125,28 @@ const MOCK_ROLES: RoleListItem[] = [
 // Profile is added so the Development tab has dev data to render across
 // all 3 profiles. Mix is roughly 3 DXO / 3 EOS / 3 MDES so each profile
 // has ≥1 example to exercise.
+// Profile + DTCO seeds. The 5th tuple element is the Profile; the 6th is
+// optional DTCO skills — when present, IsDTCO=true so the row appears on
+// the DTCO ledger in dev.
 const MOCK_INDIVIDUALS: IndividualListItem[] = (
   [
-    ["Tan Wei Ming", "COL",   "Software Engineering", "E1001", "DXO"],
-    ["Siti Aminah",  "LTC",   "Software Engineering", "E1002", "DXO"],
-    ["Raj Kumar",    "LTC",   "Cyber",                "E1003", "DXO"],
-    ["Wong Hui",     "ME6-1", "Cloud",                "E1004", "MDES"],
-    ["Jane Lim",     "ME5",   "Software Engineering", "E1005", "MDES"],
-    ["Alex Chua",    "ME5",   "Data",                 "E1006", "MDES"],
-    ["Daniel Ong",   "CPT",   "Cyber",                "E1007", "EOS"],
-    ["Priya Nair",   "CPT",   "Cyber",                "E1008", "EOS"],
-    ["Marcus Teo",   "CPT",   "Software Engineering", "E1009", "EOS"],
-  ] as [string, string, string, string, "MDES" | "EOS" | "DXO"][]
-).map(([name, rank, spec, eid, profile], i): IndividualListItem => ({
+    ["Tan Wei Ming", "COL",   "Software Engineering", "E1001", "DXO",  "Cyber Ops, Cloud Architecture"],
+    ["Siti Aminah",  "LTC",   "Software Engineering", "E1002", "DXO",  null],
+    ["Raj Kumar",    "LTC",   "Cyber",                "E1003", "DXO",  "Cyber Defence, Threat Intel"],
+    ["Wong Hui",     "ME6-1", "Cloud",                "E1004", "MDES", null],
+    ["Jane Lim",     "ME5",   "Software Engineering", "E1005", "MDES", null],
+    ["Alex Chua",    "ME5",   "Data",                 "E1006", "MDES", "ML/AI, Data Engineering"],
+    ["Daniel Ong",   "CPT",   "Cyber",                "E1007", "EOS",  null],
+    ["Priya Nair",   "CPT",   "Cyber",                "E1008", "EOS",  null],
+    ["Marcus Teo",   "CPT",   "Software Engineering", "E1009", "EOS",  null],
+  ] as [string, string, string, string, "MDES" | "EOS" | "DXO", string | null][]
+).map(([name, rank, spec, eid, profile, dtcoSkills], i): IndividualListItem => ({
   Id: i + 1, Title: name,
   Rank: rank, Specialisation: spec, EmployeeId: eid,
   Email: null, IsExternal: false, IsActive: true,
   Profile: profile,
+  IsDTCO: dtcoSkills != null,
+  DTCOSkills: dtcoSkills,
   Created: _NOW, Modified: _NOW, Author: _STAFF, Editor: _STAFF,
 }));
 
@@ -465,6 +470,8 @@ export const mockStore = {
       IsExternal: data.IsExternal,
       IsActive: data.IsActive,
       Profile: data.Profile,
+      IsDTCO: data.IsDTCO,
+      DTCOSkills: data.DTCOSkills,
       Created: NOW(),
       Modified: NOW(),
       Author: STAFF,

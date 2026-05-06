@@ -42,7 +42,7 @@ import { COURSE_ATTENDANCE_LIST } from "@/types/courseAttendance";
 import { PROGRESSION_LIST } from "@/types/progression";
 
 /** Bump on any column add/remove/rename. Mirrored in CLAUDE.md changelog. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** Web-property key holding the currently-applied schema version. */
 export const SCHEMA_VERSION_KEY = "ManpowerTracker_SchemaVersion";
@@ -380,6 +380,92 @@ export async function runMigrationV2(
       );
       break;
     }
+  }
+  return results;
+}
+
+// ─── v2 → v3 migration ──────────────────────────────────────────────────────
+//
+// Adds the DTCO feature: two new columns on the existing INDIVIDUALS list.
+// Existing rows get IsDTCO=false / DTCOSkills=null automatically. UNITS,
+// ROLES, POSTINGS, ROA_COURSES, INDIVIDUAL_COURSE_ATTENDANCE, and
+// INDIVIDUAL_PROGRESSION are NOT touched.
+
+export const V3_MIGRATIONS: { name: string; run: () => Promise<void> }[] = [
+  {
+    name: `${INDIVIDUALS_LIST}: add IsDTCO column`,
+    run: async () => {
+      if (await fieldExists(INDIVIDUALS_LIST, "IsDTCO")) return;
+      await addBooleanField(INDIVIDUALS_LIST, "IsDTCO", false);
+    },
+  },
+  {
+    name: `${INDIVIDUALS_LIST}: add DTCOSkills column`,
+    run: async () => {
+      if (await fieldExists(INDIVIDUALS_LIST, "DTCOSkills")) return;
+      await addNoteField(INDIVIDUALS_LIST, "DTCOSkills", false);
+    },
+  },
+  {
+    name: `Mark schema version = 3`,
+    run: async () => {
+      await setWebProperty(SCHEMA_VERSION_KEY, "3");
+    },
+  },
+];
+
+/**
+ * Run the v2→v3 migration. Idempotent — every step gates on existence so
+ * re-runs on partial failure are safe.
+ */
+export async function runMigrationV3(
+  onProgress?: (r: ProvisioningStepResult) => void,
+): Promise<ProvisioningStepResult[]> {
+  const results: ProvisioningStepResult[] = [];
+  log("info", `Starting v2→v3 schema migration`);
+  for (const step of V3_MIGRATIONS) {
+    try {
+      await step.run();
+      const r: ProvisioningStepResult = { name: step.name, status: "ok" };
+      results.push(r);
+      onProgress?.(r);
+      log("info", `Migration step ok: ${step.name}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const r: ProvisioningStepResult = { name: step.name, status: "error", error: message };
+      results.push(r);
+      onProgress?.(r);
+      log(
+        "error",
+        `Migration step failed: ${step.name}: ${message}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      break;
+    }
+  }
+  return results;
+}
+
+/**
+ * Chain whatever migrations are needed to bring an existing deploy up to the
+ * current SCHEMA_VERSION. Idempotent: if the current version is already
+ * fresh, this is a no-op. If something fails midway, re-running picks up
+ * from where it left off (each migration's individual steps gate on
+ * existence checks).
+ */
+export async function runMigrationsToCurrent(
+  currentVersion: number,
+  onProgress?: (r: ProvisioningStepResult) => void,
+): Promise<ProvisioningStepResult[]> {
+  const results: ProvisioningStepResult[] = [];
+  if (currentVersion < 2) {
+    const r = await runMigrationV2(onProgress);
+    results.push(...r);
+    if (r.some((x) => x.status === "error")) return results;
+  }
+  if (currentVersion < 3) {
+    const r = await runMigrationV3(onProgress);
+    results.push(...r);
   }
   return results;
 }

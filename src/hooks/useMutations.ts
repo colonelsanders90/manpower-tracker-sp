@@ -269,7 +269,65 @@ export function useCreateIndividual() {
         IsExternal: input.isExternal,
         IsActive: true,
         Profile: input.profile ?? null,
+        IsDTCO: false,
+        DTCOSkills: null,
       });
+    },
+    onSuccess: () => invalidate(INDIVIDUALS_KEY),
+  });
+}
+
+// ─── DTCO upsert ─────────────────────────────────────────────────────────────
+//
+// Admin clicks "+ Add DTCO" → AD picker returns { name, email, loginName }
+// → admin types skills → save. We look up an existing INDIVIDUAL by Email
+// (case-insensitive). If found, flip IsDTCO=true and update DTCOSkills (the
+// person stays a RAiDer if they already are). If not found, create a new
+// row with IsExternal=true, IsDTCO=true. No duplicates.
+
+export type UpsertDTCOInput = {
+  name: string;
+  email: string | null;
+  skills: string | null;
+};
+
+export function useUpsertDTCO() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (input: UpsertDTCOInput) => {
+      if (!input.name.trim()) throw new Error("Name is required");
+      const skills = input.skills?.trim() || null;
+      const email = input.email?.trim() || null;
+
+      // Lookup by email when available — that's the closest to a unique key
+      // we have for AD-sourced people. Falls back to exact-name match.
+      const all = await dataAccess.getIndividuals();
+      const existing = all.find((i) => {
+        if (email && i.Email && i.Email.toLowerCase() === email.toLowerCase()) return true;
+        if (i.Title.toLowerCase() === input.name.trim().toLowerCase()) return true;
+        return false;
+      });
+
+      if (existing) {
+        await dataAccess.updateIndividual(existing.Id, {
+          Title: existing.Title,
+          IsDTCO: true,
+          DTCOSkills: skills,
+        });
+      } else {
+        await dataAccess.createIndividual({
+          Title: input.name.trim(),
+          Rank: null,
+          Specialisation: null,
+          EmployeeId: null,
+          Email: email,
+          IsExternal: true, // not a RAiDer by default; admin can edit later
+          IsActive: true,
+          Profile: null,
+          IsDTCO: true,
+          DTCOSkills: skills,
+        });
+      }
     },
     onSuccess: () => invalidate(INDIVIDUALS_KEY),
   });
@@ -366,6 +424,8 @@ export function useCreatePosting() {
           IsExternal: true,
           IsActive: true,
           Profile: null, // externals don't track progression
+          IsDTCO: false,
+          DTCOSkills: null,
         });
       }
       if (individualId == null) throw new Error("Individual is required");

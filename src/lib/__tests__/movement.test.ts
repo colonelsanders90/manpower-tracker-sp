@@ -66,6 +66,8 @@ function makeIndividual(
     IsExternal: false,
     IsActive: true,
     Profile: null,
+    IsDTCO: false,
+    DTCOSkills: null,
     ...overrides,
   }
 }

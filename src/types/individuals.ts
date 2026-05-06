@@ -6,10 +6,12 @@
 // (someone who moved out) and Planned/Candidate postings (someone moving in).
 // Profile (added in v2) — MDES | EOS | DXO. Drives the Development tab's
 // per-profile field visibility and which ROA courses apply by default.
+// IsDTCO (added in v3) — flag for Dual Track Career Officers (officers
+// tracked for digital skillsets). DTCOSkills carries free-text skills.
 //
 // EmployeeId / Email are optional — kept null for externals typically.
 //
-// Schema v1, with Profile added in v2.
+// Schema v1, Profile added in v2, IsDTCO + DTCOSkills added in v3.
 
 import type { SPListItem } from "./base";
 import type { Profile } from "@/lib/progression";
@@ -25,6 +27,10 @@ export interface IndividualListItem extends SPListItem {
   IsActive: boolean;
   /** v2 — null for pre-migration rows until admin assigns a value. */
   Profile: Profile | null;
+  /** v3 — Dual Track Career Officer flag. Drives the /dtco ledger. */
+  IsDTCO: boolean;
+  /** v3 — free-text skills, e.g. "Cyber Ops, Cloud Architecture, ML/AI". */
+  DTCOSkills: string | null;
 }
 
 export interface IndividualListItemWrite {
@@ -37,4 +43,6 @@ export interface IndividualListItemWrite {
   IsExternal: boolean;
   IsActive: boolean;
   Profile: Profile | null;
+  IsDTCO: boolean;
+  DTCOSkills: string | null;
 }

@@ -13,6 +13,7 @@ import { RolesPage } from "@/routes/roles";
 import { RoleDetailPage } from "@/routes/roleDetail";
 import { DevelopmentPage } from "@/routes/development";
 import { AdminRoaCoursesPage } from "@/routes/adminRoaCourses";
+import { DTCOPage } from "@/routes/dtco";
 import { ProvisionPage } from "@/routes/provision";
 import { AdminPostingsPage } from "@/routes/adminPostings";
 import { AdminPeoplePage } from "@/routes/adminPeople";
@@ -80,6 +81,12 @@ const adminRoaCoursesRoute = createRoute({
   component: AdminRoaCoursesPage,
 });
 
+const dtcoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dtco",
+  component: DTCOPage,
+});
+
 const adminPostingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/postings",
@@ -106,6 +113,7 @@ const routeTree = rootRoute.addChildren([
   rolesRoute,
   roleDetailRoute,
   developmentRoute,
+  dtcoRoute,
   adminRoaCoursesRoute,
   adminPostingsRoute,
   adminPeopleRoute,

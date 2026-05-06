@@ -35,6 +35,7 @@ const NAV_LINKS: { to: string; label: string; admin?: boolean }[] = [
   { to: "/individuals", label: "Individuals" },
   { to: "/roles", label: "Roles" },
   { to: "/development", label: "Development" },
+  { to: "/dtco", label: "DTCO" },
   { to: "/admin/postings", label: "Admin · Postings", admin: true },
   { to: "/admin/people", label: "Admin · People", admin: true },
   { to: "/admin/roa-courses", label: "Admin · ROA Courses", admin: true },
